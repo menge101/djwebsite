@@ -97,7 +97,7 @@ class Website(Stack):
         self.web = web.Web(
             self,
             "web-application-construct",
-            handler_path="lib.handler",
+            handler_path="lib.web.handler",
             code_package_path="./build/web.zip",
             default_root_object="test.html",
             removal_policy=removal_policy,

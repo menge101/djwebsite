@@ -2,16 +2,15 @@ from pytest import fixture
 import os
 
 
-# The following fixtures are used to mock threads, uncomment and revise if needed
-# @fixture(autouse=True)
-# def disable_thread_call_maybe(connection_thread_mock, mocker, request):
-#     if "thread_test" not in request.keywords:
-#         mocker.patch("lib.website.threading.ReturningThread", return_value=connection_thread_mock)
-#
-#
-# @fixture(autouse=True)
-# def boto3_mock(mocker):
-#     return mocker.patch("lib.website.boto3")
+@fixture(autouse=True)
+def disable_thread_call_maybe(connection_thread_mock, mocker, request):
+    if "thread_test" not in request.keywords:
+        mocker.patch("lib.web.threading.ReturningThread", return_value=connection_thread_mock)
+
+
+@fixture(autouse=True)
+def boto3_mock(mocker):
+    return mocker.patch("lib.web.boto3")
 
 
 @fixture
