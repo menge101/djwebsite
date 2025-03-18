@@ -32,7 +32,7 @@ class Production(Stage):
         )
         website = Website(
             self,
-            "webapp",
+            "djweb",
             removal_policy=removal_policy,
             logging_level="INFO",
             tracing=True,
@@ -65,7 +65,7 @@ class Development(Stage):
         )
         Website(
             self,
-            "webapp",
+            "djweb",
             removal_policy=removal_policy,
             logging_level="DEBUG",
             tracing=True,
@@ -99,6 +99,7 @@ class Website(Stack):
             "web-application-construct",
             handler_path="lib.handler",
             code_package_path="./build/web.zip",
+            default_root_object="test.html",
             removal_policy=removal_policy,
             logging_level=logging_level,
             tracing=tracing,

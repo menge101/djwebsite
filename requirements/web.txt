@@ -1,0 +1,5 @@
+aws-xray-sdk
+basilico
+boto3
+boto3-stubs[dynamodb]
+simplelens

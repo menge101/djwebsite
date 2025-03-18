@@ -24,6 +24,7 @@ class Web(Construct):
         *,
         handler_path: str,
         code_package_path: str,
+        default_root_object: str,
         removal_policy: Optional[RemovalPolicy] = RemovalPolicy.RETAIN,
         logging_level: Optional[str] = None,
         tracing: Optional[bool] = False,
@@ -98,7 +99,7 @@ class Web(Construct):
         self.distribution = cloudfront.Distribution(
             self,
             "distribution",
-            default_root_object="index.html",
+            default_root_object=default_root_object,
             default_behavior=cloudfront.BehaviorOptions(
                 origin=cast(
                     cloudfront.IOrigin,
