@@ -28,8 +28,8 @@ function build_logging() {
   rm -r "${dest:?}/$build_dir"
 }
 
-function build_resume() {
-  echo "Building resume package"
+function build_web() {
+  echo "Building web package"
   build_dir=resume_build_dir
 
   if [ ! -d "$dest/$build_dir" ]; then
@@ -38,25 +38,12 @@ function build_resume() {
 
   mkdir -p $dest/$build_dir/lib
   cp ./lib/*.* $dest/$build_dir/lib/
-  uv pip install --quiet -r ./requirements/resume.txt --target $dest/$build_dir
-  (cd $dest/$build_dir && echo "Zipping: $(pwd)" && zip -Drq ../resume.zip ./*) || (echo "Failed to zip $dest/$build_dir" && exit 1)
+  uv pip install --quiet -r ./requirements/web.lock --target $dest/$build_dir --require-hashes
+  (cd $dest/$build_dir && echo "Zipping: $(pwd)" && zip -Drq ../web.zip ./*) || (echo "Failed to zip $dest/$build_dir" && exit 1)
   rm -r "${dest:?}/$build_dir"
 }
 
-function build_language() {
-  echo "Building translate function package"
-  build_dir=lang_build_dir
 
-  if [ ! -d "$dest/$build_dir" ]; then
-    mkdir -p $dest/$build_dir
-  fi
-
-  mkdir -p $dest/$build_dir/lib
-  cp ./lib/language.py $dest/$build_dir/lib/language.py
-  uv pip install --quiet -r ./requirements/language.txt --target $dest/$build_dir
-  (cd $dest/$build_dir && echo "Zipping: $(pwd)" && zip -Drq ../language.zip ./*) || (echo "Failed to zip $dest/$build_dir" && exit 1)
-  rm -r "${dest:?}/$build_dir"
-}
 
 base=$(basename "$(pwd)")
 # if [ "$base" != project ]; then
@@ -70,6 +57,5 @@ fi
 check_for_changes
 echo "Building function packages"
 build_logging
-build_resume
-build_language
+build_web
 echo "Package builds complete"

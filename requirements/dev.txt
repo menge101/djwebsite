@@ -11,4 +11,3 @@ pytest-cov
 pytest-mock
 ruff
 simplelens
-types-boto3
