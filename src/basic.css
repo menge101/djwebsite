@@ -1,0 +1,80 @@
+.biggest {
+    font-size: 2em;
+}
+
+.bigger {
+    font-size: 1.3em;
+}
+
+.big {
+    font-size: 1.1em;
+}
+
+.standard-size {
+    font-size: 1.0em;
+}
+
+.small {
+    font-size: .9em;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.bullets {
+    list-style: circle;
+}
+
+.no-bullets {
+    list-style: none;
+}
+
+.no-margin {
+    margin: 0;
+}
+
+.no-padding {
+    padding: 0;
+}
+
+.invisible {
+    max-height: 0;
+    visibility: hidden;
+}
+
+.left-side {
+    float: left;
+    margin-left: 6vw;
+    margin-top: 2vw;
+}
+
+.right-side {
+    float: right;
+    margin-right: 6vw;
+    margin-top: 2vw;
+}
+
+.centered {
+    text-align: center;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.6em;
+}
+
+.is-a-button {
+    border-style: outset;
+    border-color: oklch(41.54% 0 0);
+    align-content: center;
+    background-color: oklch(37.77% 0 0);
+    display: flex;
+    z-index: 10;
+    cursor: pointer;
+    padding: 1px;
+}
+
+.whole-fixed {
+    width: 100%;
+    position: fixed;
+}

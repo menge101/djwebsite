@@ -23,18 +23,26 @@ aws-cdk-lib==2.184.1 \
 aws-xray-sdk==2.14.0 \
     --hash=sha256:aab843c331af9ab9ba5cefb3a303832a19db186140894a523edafc024cc0493c \
     --hash=sha256:cfbe6feea3d26613a2a869d14c9246a844285c97087ad8f296f901633554ad94
-    # via -r ./requirements/dev.txt
+    # via
+    #   -r ./requirements/dev.txt
+    #   -r ./requirements/./web.txt
 basilico==0.1.0 \
     --hash=sha256:17d7622b276718c390003a844fcfb4a646835d066cd50ed815c79f133ceca3f5 \
     --hash=sha256:ce411ce9339a1f7c5384ef26c8d115507acce68022e31ea63e449284a4d42102
-    # via -r ./requirements/dev.txt
+    # via
+    #   -r ./requirements/dev.txt
+    #   -r ./requirements/./web.txt
 boto3==1.37.14 \
     --hash=sha256:56b4d1e084dbca43d5fdd070f633a84de61a6ce592655b4d239d263d1a0097fc \
     --hash=sha256:cf2e5e6d56efd5850db8ce3d9094132e4759cf2d4b5fd8200d69456bf61a20f3
-    # via -r ./requirements/dev.txt
+    # via
+    #   -r ./requirements/dev.txt
+    #   -r ./requirements/./web.txt
 boto3-stubs==1.37.14 \
     --hash=sha256:e9570809f034af9a758b11aed7a8f3bc781053863c4f5fd445bccda613aaaf17
-    # via -r ./requirements/dev.txt
+    # via
+    #   -r ./requirements/dev.txt
+    #   -r ./requirements/./web.txt
 botocore==1.37.14 \
     --hash=sha256:709a1796f436f8e378e52170e58501c1f3b5f2d1308238cf1d6a3bdba2e32851 \
     --hash=sha256:b0adce3f0fb42b914eb05079f50cf368cb9cf9745fdd206bd91fe6ac67b29aca
@@ -266,7 +274,9 @@ s3transfer==0.11.4 \
 simplelens==1.1.7 \
     --hash=sha256:01b7d9d85c75fbe25751918147fcff5635512fb049d6acc6600403023ad5fd2f \
     --hash=sha256:57fe68fe96e78dc780329ede1ce567207f762b6096e9066d11422ecafbeab751
-    # via -r ./requirements/dev.txt
+    # via
+    #   -r ./requirements/dev.txt
+    #   -r ./requirements/./web.txt
 six==1.17.0 \
     --hash=sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274 \
     --hash=sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81
