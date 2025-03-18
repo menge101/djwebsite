@@ -1,0 +1,49 @@
+# This file has all the required components for a new Element! What joy!
+# Implement the act method, which as-is no-ops, and that's just fine if that works for this element
+# Add some form of data retrieval and implement the build function
+# Build up an HTML component with Basilico classes
+# Set the heading key, assuming you need a heading
+#
+
+
+from aws_xray_sdk.core import xray_recorder
+from basilico import htmx
+from basilico.attributes import Class
+from basilico.elements import Div, Element, Li, Span, Text, Ul
+from lib import return_, session
+from typing import Optional
+import boto3
+import lens
+import logging
+import os
+
+
+logging_level = os.environ.get("logging_level", "DEBUG").upper()
+logger = logging.getLogger(__name__)
+logger.setLevel(logging_level)
+
+
+_HEADING_SK = "heading#VALUE"
+
+
+@xray_recorder.capture("## Element template act function")
+def act(
+    _data_table_name: str, session_data: session.SessionData, _params: dict[str, str]
+) -> tuple[session.SessionData, list[str]]:
+    return session_data, []
+
+
+@xray_recorder.capture("## Applying element template template")
+def apply_template() -> str:
+    template = SomeFormOfHTML_built_with_basilico
+    return template.string()
+
+
+@xray_recorder.capture("## Building element template body")
+def build(
+    table_name: str, session_data: dict[str, str], *_args, **_kwargs
+) -> return_.Returnable:
+    logger.debug("Starting education build")
+    ddb_client = boto3.client("dynamodb")
+    localization: str = session_data.get("local", "en")
+    return return_.http(body=apply_template("arguments needed for template"), status_code=200)
