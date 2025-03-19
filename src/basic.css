@@ -55,12 +55,11 @@
     margin-top: 2vw;
 }
 
-.centered {
+.block-centered {
     text-align: center;
     display: block;
     margin-left: auto;
     margin-right: auto;
-    line-height: 1.6em;
 }
 
 .is-a-button {
@@ -77,4 +76,19 @@
 .whole-fixed {
     width: 100%;
     position: fixed;
+}
+
+.vinyl-lines {
+    stroke: oklch(0.21 0.034 264.665);
+    fill: none;
+    stroke-dasharray: 0.0914415, 0.0914415;
+    stroke-opacity: .72553;
+    stroke-width: .18288;
+}
+
+.banner {
+    background-color: yellow;
+    color: black;
+    text-align: center;
+    padding: 4px;
 }
