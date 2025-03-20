@@ -111,7 +111,7 @@ class Dispatcher:
             dispatchee = self.validate(info)
         except KeyError as ke:
             logger.exception(ke)
-            logger.error("Unsupported element requested")
+            logger.error(f"Unsupported element, {info.path}, requested")
             return return_.error(ke, 404)
         except ValueError as ve:
             return return_.error(ve, 405)

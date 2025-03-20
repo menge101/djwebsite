@@ -63,10 +63,7 @@ def handler(event: dict, context):
         table_connection_thread_global_holder = table_connection_thread
     dispatcher = dispatch.Dispatcher(
         connection_thread=table_connection_thread,
-        elements={
-            "/session": "lib.session",
-            "/banner": "lib.banner",
-        },
+        elements={"/session": "lib.session", "/banner": "lib.banner", "/images": "lib.image_carousel"},
         prefix="/ui",
     )
     try:
