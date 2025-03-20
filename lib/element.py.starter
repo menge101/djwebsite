@@ -41,8 +41,9 @@ def apply_template() -> str:
 
 @xray_recorder.capture("## Building element template body")
 def build(
-    connection_thread: threading.ReturningThread, session_data: dict[str, str], *_args, **_kwargs
-) -> return_.Returnable:
+    connection_thread: threading.ReturningThread,
+    session_data: dict[str, str],
+    *_args, **_kwargs) -> return_.Returnable:
     logger.debug("Starting education build")
     table_name, ddb_client, ddb_resource = connection_thread.join()
     localization: str = session_data.get("local", "en")
