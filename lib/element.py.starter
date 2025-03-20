@@ -10,8 +10,8 @@ from aws_xray_sdk.core import xray_recorder
 from basilico import htmx
 from basilico.attributes import Class
 from basilico.elements import Div, Element, Li, Span, Text, Ul
-from lib import return_, session
-from typing import Optional
+from lib import return_, session, threading, types
+from typing import cast, Optional
 import boto3
 import lens
 import logging
@@ -28,7 +28,7 @@ _HEADING_SK = "heading#VALUE"
 
 @xray_recorder.capture("## Element template act function")
 def act(
-    _data_table_name: str, session_data: session.SessionData, _params: dict[str, str]
+    connection_thread: threading.ReturningThread, session_data: session.SessionData, _params: dict[str, str]
 ) -> tuple[session.SessionData, list[str]]:
     return session_data, []
 
@@ -41,9 +41,9 @@ def apply_template() -> str:
 
 @xray_recorder.capture("## Building element template body")
 def build(
-    table_name: str, session_data: dict[str, str], *_args, **_kwargs
+    connection_thread: threading.ReturningThread, session_data: dict[str, str], *_args, **_kwargs
 ) -> return_.Returnable:
     logger.debug("Starting education build")
-    ddb_client = boto3.client("dynamodb")
+    table_name, ddb_client, ddb_resource = connection_thread.join()
     localization: str = session_data.get("local", "en")
     return return_.http(body=apply_template("arguments needed for template"), status_code=200)
