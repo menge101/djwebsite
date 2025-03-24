@@ -30,7 +30,7 @@ function build_logging() {
 
 function build_web() {
   echo "Building web package"
-  build_dir=resume_build_dir
+  build_dir=web_build_dir
 
   if [ ! -d "$dest/$build_dir" ]; then
     mkdir -p $dest/$build_dir
