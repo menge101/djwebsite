@@ -13,40 +13,28 @@
      hx-swap="outerHTML"
      class="invisible">
 </div>
-<div>
+<div hx-get="/ui/logo?action=start"
+     hx-trigger="load"
+     hx-swap="outerHTML"
+     class="html-read">
     <svg class="block-centered w-48" viewBox="0 0 127 127" xmlns="http://www.w3.org/2000/svg">
         <defs>
-            <mask id="mask1" maskUnits="userSpaceOnUse">
-                <circle cx="63.5" cy="63.5" r="63.5" style="fill:#fff;stroke-width:.26458"/>
-            </mask>
-            <mask id="mask2" maskUnits="userSpaceOnUse">
-                <circle cx="63.5" cy="63.5" r="63.5" style="fill:#fff;stroke-width:.26458"/>
-            </mask>
-            <mask id="mask3" maskUnits="userSpaceOnUse">
-                <circle cx="63.5" cy="63.5" r="63.5" style="fill:#fff;stroke-width:.26458"/>
-            </mask>
-            <mask id="mask4" maskUnits="userSpaceOnUse">
-                <circle cx="63.5" cy="63.5" r="63.5" style="fill:#fff;stroke-width:.26458"/>
-            </mask>
-            <mask id="mask5" maskUnits="userSpaceOnUse">
-                <circle cx="63.5" cy="63.5" r="63.5" style="fill:#fff;stroke-width:.26458"/>
-            </mask>
-            <mask id="mask6" maskUnits="userSpaceOnUse">
-                <circle cx="63.5" cy="63.5" r="63.5" style="fill:#fff;stroke-width:.26458"/>
+            <mask id="mask" maskUnits="userSpaceOnUse">
+                <circle class="logo-mask" cx="63.5" cy="63.5" r="63.5"/>
             </mask>
         </defs>
         <g class="rotating">
-            <path id="red" d="m0.50612 10.583v-10.077h125.99v20.154h-125.99z" mask="url(#mask6)"
+            <path id="red" d="m0.50612 10.583v-10.077h125.99v20.154h-125.99z" mask="url(#mask)"
                   style="fill:#f00;stroke-width:1.0122;stroke:#f00"/>
-            <path id="orange" d="m0.49969 31.749v-10.084h126v20.167h-126z" mask="url(#mask5)"
+            <path id="orange" d="m0.49969 31.749v-10.084h126v20.167h-126z" mask="url(#mask)"
                   style="fill:#f60;stroke-width:.99938;stroke:#f60"/>
-            <path id="yellow" d="m0.49968 52.916v-10.083h126v20.166h-126z" mask="url(#mask4)"
+            <path id="yellow" d="m0.49968 52.916v-10.083h126v20.166h-126z" mask="url(#mask)"
                   style="fill:#fc0;stroke-width:.99936;stroke:#fc0"/>
-            <path id="green" d="m0.49968 74.083v-10.083h126v20.166h-126z" mask="url(#mask3)"
+            <path id="green" d="m0.49968 74.083v-10.083h126v20.166h-126z" mask="url(#mask)"
                   style="fill:#0f0;stroke-width:.99936;stroke:#0f0"/>
-            <path id="blue" d="m0.49968 95.249v-10.083h126v20.166h-126z" mask="url(#mask2)"
+            <path id="blue" d="m0.49968 95.249v-10.083h126v20.166h-126z" mask="url(#mask)"
                   style="fill:#00f;stroke-width:.99936;stroke:#00f"/>
-            <path id="purple" d="m0.51281 116.41v-10.07h125.97v20.141h-125.97z" mask="url(#mask1)"
+            <path id="purple" d="m0.51281 116.41v-10.07h125.97v20.141h-125.97z" mask="url(#mask)"
                   style="fill:#800080;stroke-width:1.0256;stroke:#800080"/>
         </g>
         <ellipse id="outercircle" cx="63.5" cy="63.5" rx="62.446" ry="62.446"

@@ -78,14 +78,6 @@
     position: fixed;
 }
 
-.vinyl-lines {
-    stroke: oklch(0.21 0.034 264.665);
-    fill: none;
-    stroke-dasharray: 0.0914415, 0.0914415;
-    stroke-opacity: .72553;
-    stroke-width: .18288;
-}
-
 .banner {
     background-color: yellow;
     color: black;

@@ -50,3 +50,71 @@
     height: inherit;
     width: inherit;
 }
+
+.logo-mask {
+    fill: #ffffff;
+    stroke-width: .26458;
+}
+
+.logo-stripe1 {
+    fill: #f00;
+    stroke-width: 1.0122;
+    stroke: #f00
+}
+
+.logo-stripe2 {
+    fill: #f60;
+    stroke-width: 1.0122;
+    stroke: #f60
+}
+
+.logo-stripe3 {
+    fill: #fc0;
+    stroke-width: 1.0122;
+    stroke: #fc0
+}
+
+.logo-stripe4 {
+    fill: #0f0;
+    stroke-width: 1.0122;
+    stroke: #0f0
+}
+
+.logo-stripe5 {
+    fill: #00f;
+    stroke-width: 1.0122;
+    stroke: #00f
+}
+
+.logo-stripe6 {
+    fill: #800080;
+    stroke-width: 1.0122;
+    stroke: #800080
+}
+
+ellipse#outercircle {
+    fill: none;
+    stroke-width: 2.1072;
+    stroke: #000
+}
+
+circle#recordlabel {
+    fill: #f0f;
+}
+
+circle#spindlehole {
+    fill: #fff;
+}
+
+path#wzl {
+    stroke-width: .26458;
+    stroke: #000
+}
+
+.vinyl-lines {
+    stroke: oklch(0.21 0.034 264.665);
+    fill: none;
+    stroke-dasharray: 0.0914415, 0.0914415;
+    stroke-opacity: .72553;
+    stroke-width: .18288;
+}
