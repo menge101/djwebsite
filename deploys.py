@@ -58,9 +58,11 @@ class Development(Stage):
             default_ttl=Duration.seconds(1),
             max_ttl=Duration.seconds(1),
         )
+        headers = ["HX-Trigger", "HX-Trigger-Name", "HX-Request", "HX-Current-URL", "HX-Prompt", "HX-Target"]
+        header_behavior = cf.OriginRequestHeaderBehavior.allow_list(*headers)
         origin_policy_props = cf.OriginRequestPolicyProps(
             cookie_behavior=cf.OriginRequestCookieBehavior.all(),
-            header_behavior=cf.OriginRequestHeaderBehavior.none(),
+            header_behavior=header_behavior,
             query_string_behavior=cf.OriginRequestQueryStringBehavior.allow_list("action"),
         )
         Website(
