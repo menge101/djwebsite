@@ -7,13 +7,13 @@ import lens
 import logging
 import os
 
-
 from lib import return_, session, threading
-
 
 logging_level = os.environ.get("logging_level", "DEBUG").upper()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging_level)
+
+ALLOWED_METHODS = ["GET", "POST"]
 
 
 class Dispatchable(Protocol):
@@ -125,10 +125,7 @@ class Dispatcher:
 
     @xray_recorder.capture("## Validating request")
     def validate(self, info: DispatchInfo) -> Dispatchable:
-        ALLOWED_METHODS = ["GET", "POST"]
         if info.method not in ALLOWED_METHODS:
             raise ValueError(f"Method {info.method} is not supported, must be one of {' ,'.join(ALLOWED_METHODS)}")
-        xray_recorder.begin_subsegment(f"importing {self.elements[info.path]}")
         module = importlib.import_module(self.elements[info.path])
-        xray_recorder.end_subsegment()
         return cast(Dispatchable, module)

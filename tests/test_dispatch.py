@@ -15,6 +15,23 @@ def delete_event():
 
 
 @fixture
+def dispatcher(connection_thread_mock, prefix):
+    return Dispatcher(
+        connection_thread=connection_thread_mock,
+        elements={"/banner": "lib.banner", "/sections": "lib.sections", "/sections/about": "lib.sections.about"},
+        prefix=prefix,
+    )
+
+
+@fixture
+def dispatcher_no_prefix(connection_thread_mock):
+    return Dispatcher(
+        connection_thread=connection_thread_mock,
+        elements={"/ui/banner": "lib.banner", "/sections": "lib.sections"},
+    )
+
+
+@fixture
 def http_request_event():
     return {
         "version": "2.0",
@@ -58,7 +75,7 @@ def http_request_event():
             "domainPrefix": "bxdsranrgc5bkf5ph5b66dfz5i0okagy",
             "http": {
                 "method": "GET",
-                "path": "/ui/element",
+                "path": "/ui/banner",
                 "protocol": "HTTP/1.1",
                 "sourceIp": "130.176.36.140",
                 "userAgent": "Amazon CloudFront",
@@ -77,7 +94,31 @@ def http_request_event():
 def post_event():
     return {
         "requestContext": {
-            "http": {"method": "POST", "path": "/ui/element"},
+            "http": {"method": "POST", "path": "/ui/banner"},
+            "requestId": "yolo",
+        },
+        "rawQueryString": "",
+        "version": "2.0",
+    }
+
+
+@fixture
+def section_event():
+    return {
+        "requestContext": {
+            "http": {"method": "POST", "path": "/ui/sections"},
+            "requestId": "yolo",
+        },
+        "rawQueryString": "",
+        "version": "2.0",
+    }
+
+
+@fixture
+def about_event():
+    return {
+        "requestContext": {
+            "http": {"method": "POST", "path": "/ui/sections/about"},
             "requestId": "yolo",
         },
         "rawQueryString": "",
@@ -128,18 +169,57 @@ def mock_import(mocker, mock_dispatchable):
 
 
 def test_dispatcher(
-    connection_thread_mock,
+    dispatcher,
     http_request_event,
-    table_name,
-    mock_import,
-    prefix,
-    session_data,
 ):
-    observed = Dispatcher(
-        connection_thread=connection_thread_mock,
-        elements={"/element": "lib.element"},
-        prefix=prefix,
-    ).dispatch(http_request_event)
+    observed = dispatcher.dispatch(http_request_event)
+    expected = {
+        "body": '<div class="banner invisible">Environment name not set</div>',
+        "cookies": [],
+        "headers": {"Content-Type": "text/html"},
+        "isBase64Encoded": False,
+        "statusCode": 200,
+    }
+    assert observed == expected
+
+
+def test_dispatcher_sections(client_mock, dispatcher, section_event):
+    client_mock.query.return_value = {"Items": [{"pk": {"S": "section"}, "sk": {"S": "none"}, "name": {"S": "about"}}]}
+    client_mock.get_item.return_value = {
+        "Item": {"pk": {"S": "en"}, "sk": {"S": "section#label#about"}, "text": {"S": "About"}}
+    }
+    observed = dispatcher.dispatch(section_event)
+    expected = {
+        "body": '<div class="tabs tab-border flex-col justify-center"><input '
+        'type="radio" class="tab w-1/1" aria-label="About"><div '
+        'class="tab-content" hx-get="/ui/sections/about" '
+        'hx-trigger="load" hx-swap="outerHTML"></div></div>',
+        "cookies": [],
+        "headers": {"Content-Type": "text/html"},
+        "isBase64Encoded": False,
+        "statusCode": 200,
+    }
+    assert observed == expected
+
+
+def test_dispatcher_about_section(client_mock, dispatcher, about_event):
+    client_mock.query.return_value = {"Items": [{"pk": {"S": "section"}, "sk": {"S": "none"}, "name": {"S": "about"}}]}
+    client_mock.get_item.return_value = {
+        "Item": {"pk": {"S": "en"}, "sk": {"S": "section#body#about"}, "text": {"S": "About body text"}}
+    }
+    observed = dispatcher.dispatch(about_event)
+    expected = {
+        "body": '<div class="hero prose tab-content">About body text</div>',
+        "cookies": [],
+        "headers": {"Content-Type": "text/html"},
+        "isBase64Encoded": False,
+        "statusCode": 200,
+    }
+    assert observed == expected
+
+
+def test_no_prefix(dispatcher_no_prefix, http_request_event, mock_import):
+    observed = dispatcher_no_prefix.dispatch(http_request_event)
     expected = {
         "body": "yolo",
         "cookies": [],
@@ -150,12 +230,8 @@ def test_dispatcher(
     assert observed == expected
 
 
-def test_dispatch_post(connection_thread_mock, post_event, table_name, mock_import, prefix, session_data):
-    observed = Dispatcher(
-        connection_thread=connection_thread_mock,
-        elements={"/element": "lib.element"},
-        prefix=prefix,
-    ).dispatch(post_event)
+def test_dispatch_post(dispatcher, post_event, mock_import):
+    observed = dispatcher.dispatch(post_event)
     expected = {
         "body": "yolo",
         "cookies": [],
@@ -166,116 +242,81 @@ def test_dispatch_post(connection_thread_mock, post_event, table_name, mock_impo
     assert observed == expected
 
 
-def test_dispatch_delete(connection_thread_mock, delete_event, table_name, mock_import, prefix, session_data):
-    observed_response = Dispatcher(
-        connection_thread=connection_thread_mock,
-        elements={"/element": "lib.element"},
-        prefix=prefix,
-    ).dispatch(delete_event)
+def test_dispatch_delete(delete_event, dispatcher, mock_import):
+    observed_response = dispatcher.dispatch(delete_event)
     assert observed_response["statusCode"] == 405
 
 
 def test_dispatch_unsupported_element(
-    connection_thread_mock,
+    dispatcher,
     unsupported_event,
-    table_name,
-    mock_import,
-    prefix,
-    session_data,
 ):
-    observed_response = Dispatcher(
-        connection_thread=connection_thread_mock,
-        elements={"/element": "lib.element"},
-        prefix=prefix,
-    ).dispatch(unsupported_event)
+    observed_response = dispatcher.dispatch(unsupported_event)
     assert observed_response["statusCode"] == 404
 
 
-def test_dispatch_missing_path(connection_thread_mock, table_name, mock_import, prefix, session_data):
+def test_dispatch_missing_path(dispatcher):
     event = {
         "requestContext": {"http": {"method": "GET"}, "requestId": "yolo"},
         "rawQueryString": "",
         "version": "2.0",
     }
-    observed_response = Dispatcher(
-        connection_thread=connection_thread_mock,
-        elements={"/element": "lib.element"},
-        prefix=prefix,
-    ).dispatch(event)
+    observed_response = dispatcher.dispatch(event)
     assert observed_response["statusCode"] == 400
 
 
-def test_dispatch_missing_version(connection_thread_mock, table_name, mock_import, prefix, session_data):
+def test_dispatch_missing_version(dispatcher):
     event = {
         "requestContext": {
-            "http": {"method": "GET", "path": "/ui/element"},
+            "http": {"method": "GET", "path": "/ui/banner"},
             "requestId": "yolo",
         },
         "rawQueryString": "",
     }
-    observed_response = Dispatcher(
-        connection_thread=connection_thread_mock,
-        elements={"/element": "lib.element"},
-        prefix=prefix,
-    ).dispatch(event)
+    observed_response = dispatcher.dispatch(event)
     assert observed_response["statusCode"] == 400
 
 
-def test_dispatch_missing_method(connection_thread_mock, table_name, mock_import, prefix, session_data):
+def test_dispatch_missing_method(dispatcher):
     event = {
-        "requestContext": {"http": {"path": "/ui/element"}, "requestId": "yolo"},
+        "requestContext": {"http": {"path": "/ui/banner"}, "requestId": "yolo"},
         "rawQueryString": "",
     }
-    observed_response = Dispatcher(
-        connection_thread=connection_thread_mock,
-        elements={"/element": "lib.element"},
-        prefix=prefix,
-    ).dispatch(event)
+    observed_response = dispatcher.dispatch(event)
     assert observed_response["statusCode"] == 400
 
 
-def test_dispatch_missing_request_id(connection_thread_mock, table_name, mock_import, prefix, session_data):
+def test_dispatch_missing_request_id(dispatcher):
     event = {
         "requestContext": {
-            "http": {"path": "/ui/element", "method": "GET"},
+            "http": {"path": "/ui/banner", "method": "GET"},
         },
         "rawQueryString": "",
     }
-    observed_response = Dispatcher(
-        connection_thread=connection_thread_mock,
-        elements={"/element": "lib.element"},
-        prefix=prefix,
-    ).dispatch(event)
+    observed_response = dispatcher.dispatch(event)
     assert observed_response["statusCode"] == 400
 
 
-def test_dispatch_missing_query_string(connection_thread_mock, mock_import, prefix, session_data):
+def test_dispatch_missing_query_string(dispatcher):
     event = {
         "requestContext": {
-            "http": {"path": "/ui/element", "method": "GET"},
+            "http": {"path": "/ui/banner", "method": "GET"},
             "requestId": "yolo",
         },
     }
-    observed_response = Dispatcher(
-        connection_thread=connection_thread_mock,
-        elements={"/element": "lib.element"},
-        prefix=prefix,
-    ).dispatch(event)
+    observed_response = dispatcher.dispatch(event)
     assert observed_response["statusCode"] == 400
 
 
-def test_no_expected_path(connection_thread_mock, mock_import, session_data):
+def test_no_expected_path(dispatcher, mock_import):
     event = {
         "version": "2.0",
         "requestContext": {
-            "http": {"path": "/element", "method": "GET"},
+            "http": {"path": "/banner", "method": "GET"},
             "requestId": "yolo",
         },
     }
-    observed = Dispatcher(
-        connection_thread=connection_thread_mock,
-        elements={"/element": "lib.element"},
-    ).dispatch(event)
+    observed = dispatcher.dispatch(event)
     expected = {
         "body": "yolo",
         "cookies": [],
@@ -287,19 +328,13 @@ def test_no_expected_path(connection_thread_mock, mock_import, session_data):
 
 
 def test_dispatch_event_triggers_events(
-    connection_thread_mock,
-    prefix,
-    session_data,
+    dispatcher,
     http_request_event,
     mock_dispatchable,
     mock_import,
 ):
     mock_dispatchable.act.side_effect = lambda _d_tbl, data, _params: (data, ["yolo"])
-    observed = Dispatcher(
-        connection_thread=connection_thread_mock,
-        elements={"/element": "lib.element"},
-        prefix=prefix,
-    ).dispatch(http_request_event)
+    observed = dispatcher.dispatch(http_request_event)
     expected = {
         "body": "yolo",
         "cookies": [],
@@ -310,11 +345,11 @@ def test_dispatch_event_triggers_events(
     assert observed == expected
 
 
-def test_act_raises_value_error(connection_thread_mock, mock_import, mock_dispatchable, session_data):
+def test_act_raises_value_error(dispatcher, mock_dispatchable, mock_import):
     event = {
         "version": "2.0",
         "requestContext": {
-            "http": {"path": "/element", "method": "GET"},
+            "http": {"path": "/banner", "method": "GET"},
             "requestId": "yolo",
         },
     }
@@ -326,8 +361,5 @@ def test_act_raises_value_error(connection_thread_mock, mock_import, mock_dispat
         "isBase64Encoded": False,
         "statusCode": 500,
     }
-    observed = Dispatcher(
-        connection_thread=connection_thread_mock,
-        elements={"/element": "lib.element"},
-    ).dispatch(event)
+    observed = dispatcher.dispatch(event)
     assert observed == expected
