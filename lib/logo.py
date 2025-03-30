@@ -1,13 +1,12 @@
-import lens
 from aws_xray_sdk.core import xray_recorder
 from basilico import htmx
 from basilico.attributes import Attribute, Class, ID
 from basilico.elements import Div, Element, SVG
 from lib import return_, session, threading
 from typing import cast
+import lens
 import logging
 import os
-
 
 logging_level = os.environ.get("logging_level", "DEBUG").upper()
 logger = logging.getLogger(__name__)

@@ -37,7 +37,7 @@ function build_web() {
   fi
 
   mkdir -p $dest/$build_dir/lib
-  cp ./lib/*.* $dest/$build_dir/lib/
+  cp -R ./lib/* $dest/$build_dir/lib/
   uv pip install --quiet -r ./requirements/web.lock --target $dest/$build_dir --require-hashes
   (cd $dest/$build_dir && echo "Zipping: $(pwd)" && zip -Drq ../web.zip ./*) || (echo "Failed to zip $dest/$build_dir" && exit 1)
   rm -r "${dest:?}/$build_dir"

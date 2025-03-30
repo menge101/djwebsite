@@ -8,14 +8,12 @@ import logging
 import os
 import sys
 
-
 from lib import (
     dispatch,
     return_,
     threading,
     types,
 )
-
 
 patch_all()
 
@@ -68,6 +66,8 @@ def handler(event: dict, context):
             "/banner": "lib.banner",
             "/images": "lib.image_carousel",
             "/logo": "lib.logo",
+            "/sections": "lib.sections",
+            "/sections/about": "lib.sections.about",
         },
         prefix="/ui",
     )
