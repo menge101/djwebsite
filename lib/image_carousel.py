@@ -90,5 +90,5 @@ def get_data(connection_thread: threading.ReturningThread) -> list[Image]:
 
 
 @xray_recorder.capture("## Packaging image data")
-def package_data(data: dict[str, str]) -> list[Image]:
+def package_data(data: dict[str, dict[str, str]]) -> list[Image]:
     return [Image(lens.focus(item, ["url", "S"]), lens.focus(item, ["alt_text", "S"])) for item in data]
