@@ -190,10 +190,12 @@ def test_dispatcher_sections(client_mock, dispatcher, section_event):
     }
     observed = dispatcher.dispatch(section_event)
     expected = {
-        "body": '<div class="tabs tab-border flex-col justify-center"><input '
-        'type="radio" class="tab w-1/1" aria-label="About"><div '
-        'class="tab-content" hx-get="/ui/sections/about" '
-        'hx-trigger="load" hx-swap="outerHTML"></div></div>',
+        "body": '<div class="justify-center flex"><div class="tabs tab-border '
+        'justify-center gap-2 pb-3 text-sm font-bold w-full"><input '
+        'type="radio" name="tab_group" class="tab min-w-fit w-1/1" '
+        'aria-label="About"><div class="tab-content"><div '
+        'class="justify-center" hx-get="/ui/sections/none" hx-trigger="revealed" '
+        'hx-swap="innerHTML"></div></div></div></div>',
         "cookies": [],
         "headers": {"Content-Type": "text/html"},
         "isBase64Encoded": False,
@@ -209,7 +211,8 @@ def test_dispatcher_about_section(client_mock, dispatcher, about_event):
     }
     observed = dispatcher.dispatch(about_event)
     expected = {
-        "body": '<div class="hero prose tab-content">About body text</div>',
+        "body": '<div class="hero bg-base-200 min-h-96 w-2/3 tab-content m-auto"><div '
+        'class="hero-content text-center">About body text</div></div>',
         "cookies": [],
         "headers": {"Content-Type": "text/html"},
         "isBase64Encoded": False,
