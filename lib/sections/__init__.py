@@ -1,6 +1,6 @@
 from aws_xray_sdk.core import xray_recorder
 from basilico import htmx
-from basilico.attributes import Aria, Class, Type
+from basilico.attributes import Aria, Class, Name, Type
 from basilico.elements import Div, Element, Input
 from lib import return_, session, threading, types
 from mypy_boto3_dynamodb.client import DynamoDBClient
@@ -29,14 +29,19 @@ class Section:
         return lens.focus(response, ["Item", "text", "S"])
 
     def render_input(self) -> Input:
-        return Input(Type("radio"), Class(f"tab {self.width_class}"), Aria("label", self.label))
+        return Input(
+            Type("radio"), Name("tab_group"), Class(f"tab min-w-fit {self.width_class}"), Aria("label", self.label)
+        )
 
     def render_content(self) -> Div:
         return Div(
             Class("tab-content"),
-            htmx.Get(f"/ui/sections/{self.name}"),
-            htmx.Trigger("load"),
-            htmx.Swap("outerHTML"),
+            Div(
+                Class("justify-center"),
+                htmx.Get(f"/ui/sections/{self.name}"),
+                htmx.Trigger("revealed"),
+                htmx.Swap("innerHTML"),
+            ),
         )
 
 
@@ -49,7 +54,10 @@ def act(
 
 @xray_recorder.capture("## Applying element template template")
 def apply_template(elements: list[Element]) -> str:
-    template = Div(Class("tabs tab-border flex-col justify-center"), *elements)
+    template = Div(
+        Class("justify-center flex"),
+        Div(Class("tabs tab-border justify-center gap-2 pb-3 text-sm font-bold w-full"), *elements),
+    )
     return template.string()
 
 
@@ -60,6 +68,7 @@ def build(
     logger.debug("Starting Sections build")
     localization: str = session_data.get("local", "en")
     elements: list[Input | Div] = get_data(connection_thread, localization)
+
     return return_.http(body=apply_template(elements), status_code=200)
 
 
@@ -84,7 +93,7 @@ def get_section_names(ddb_client: DynamoDBClient, table_name: str) -> list[str]:
             ":pkval": {"S": "section"},
         },
     )
-    return lens.focus(response, ["Items", "name", "S"])
+    return lens.focus(response, ["Items", "sk", "S"])
 
 
 @xray_recorder.capture("## Packaging data")

@@ -22,14 +22,14 @@ class Mix:
 
 @xray_recorder.capture("## Mixes act function")
 def act(
-        _connection_thread: threading.ReturningThread, session_data: session.SessionData, _params: dict[str, str]
+    _connection_thread: threading.ReturningThread, session_data: session.SessionData, _params: dict[str, str]
 ) -> tuple[session.SessionData, list[str]]:
     return session_data, []
 
 
 @xray_recorder.capture("## Applying mixes template")
 def apply_template(mixes: list[Mix]) -> str:
-    template = Div(Class("w-8/12 space-y-16 block m-auto"), *(mix.render() for mix in mixes))
+    template = Div(Class("tab w-2/3 m-auto space-y-16"), *(mix.render() for mix in mixes))
     return template.string()
 
 

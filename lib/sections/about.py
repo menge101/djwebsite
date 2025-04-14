@@ -14,14 +14,16 @@ logger.setLevel(logging_level)
 
 @xray_recorder.capture("## Element template act function")
 def act(
-    connection_thread: threading.ReturningThread, session_data: session.SessionData, _params: dict[str, str]
+    _connection_thread: threading.ReturningThread, session_data: session.SessionData, _params: dict[str, str]
 ) -> tuple[session.SessionData, list[str]]:
     return session_data, []
 
 
 @xray_recorder.capture("## Applying element template template")
 def apply_template(text: str) -> str:
-    template = Div(Class("hero prose tab-content"), Text(text))
+    template = Div(
+        Class("hero bg-base-200 min-h-96 w-2/3 tab-content m-auto"), Div(Class("hero-content text-center"), Text(text))
+    )
     return template.string()
 
 
