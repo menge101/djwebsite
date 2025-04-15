@@ -12,14 +12,14 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging_level)
 
 
-@xray_recorder.capture("## Element template act function")
+@xray_recorder.capture("## About act function")
 def act(
-    _connection_thread: threading.ReturningThread, session_data: session.SessionData, _params: dict[str, str]
+        _connection_thread: threading.ReturningThread, session_data: session.SessionData, _params: dict[str, str]
 ) -> tuple[session.SessionData, list[str]]:
     return session_data, []
 
 
-@xray_recorder.capture("## Applying element template template")
+@xray_recorder.capture("## Applying about template")
 def apply_template(text: str) -> str:
     template = Div(
         Class("hero bg-base-200 min-h-96 w-2/3 tab-content m-auto"), Div(Class("hero-content text-center"), Text(text))
@@ -27,9 +27,9 @@ def apply_template(text: str) -> str:
     return template.string()
 
 
-@xray_recorder.capture("## Building element template body")
+@xray_recorder.capture("## Building about body")
 def build(
-    connection_thread: threading.ReturningThread, session_data: dict[str, str], *_args, **_kwargs
+        connection_thread: threading.ReturningThread, session_data: dict[str, str], *_args, **_kwargs
 ) -> return_.Returnable:
     logger.debug("Starting about build")
     localization: str = session_data.get("local", "en")
