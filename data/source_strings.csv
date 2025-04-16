@@ -1,0 +1,22 @@
+pk,sk,text
+en,contact#form#contact_details,Contact Details
+en,contact#form#name,Name
+en,contact#form#email,Email
+en,contact#form#enter_email,Enter valid email address
+en,contact#form#phone,Phone
+en,contact#form#number,Number
+en,contact#form#event_details,Event Details
+en,contact#form#date,Date
+en,contact#form#time,Time
+en,contact#form#location,Location
+en,contact#form#description,Description
+en,contact#form#event_type,What kind of event is this?
+en,contact#form#no,No
+en,contact#form#karaoke,Karaoke?
+en,contact#form#yes,Yes
+en,contact#form#submit,Submit
+en,contact#form#refresh,Refresh
+en,section#body#about,About text
+en,section#label#about,About
+en,section#label#contact,Contact
+en,section#label#mixes,Mixes
