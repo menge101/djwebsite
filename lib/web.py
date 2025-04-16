@@ -67,9 +67,11 @@ def handler(event: dict, context):
             "/images": "lib.image_carousel",
             "/logo": "lib.logo",
             "/mixes": "lib.mixes",
+            "/contact": "lib.contact",
             "/sections": "lib.sections",
             "/sections/about": "lib.sections.about",
             "/sections/mixes": "lib.sections.mixes",
+            "/sections/contact": "lib.sections.contact",
         },
         prefix="/ui",
     )

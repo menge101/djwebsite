@@ -10,7 +10,6 @@ from constructs import Construct
 from infrastructure import hosted_zone, web
 from typing import Optional
 
-
 DEV_ENV = Environment(account="779846793683", region="us-east-1")
 PRD_ENV = Environment(account="473626866269", region="us-east-1")
 PRODUCTION_DOMAIN_NAME = "not set"
@@ -58,12 +57,11 @@ class Development(Stage):
             default_ttl=Duration.seconds(1),
             max_ttl=Duration.seconds(1),
         )
-        headers = ["HX-Trigger", "HX-Trigger-Name", "HX-Request", "HX-Current-URL", "HX-Prompt", "HX-Target"]
-        header_behavior = cf.OriginRequestHeaderBehavior.allow_list(*headers)
+        headers = ["HX-*", "Origin", "Referer", "User-Agent", "Sec*", "Accept*"]
         origin_policy_props = cf.OriginRequestPolicyProps(
             cookie_behavior=cf.OriginRequestCookieBehavior.all(),
-            header_behavior=header_behavior,
-            query_string_behavior=cf.OriginRequestQueryStringBehavior.allow_list("action"),
+            header_behavior=(cf.OriginRequestHeaderBehavior.allow_list(*headers)),
+            query_string_behavior=(cf.OriginRequestQueryStringBehavior.all()),
         )
         Website(
             self,

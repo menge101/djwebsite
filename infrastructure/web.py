@@ -114,6 +114,7 @@ class Web(Construct):
             ),
             additional_behaviors={
                 "/ui/*": cloudfront.BehaviorOptions(
+                    allowed_methods=cloudfront.AllowedMethods.ALLOW_ALL,
                     origin=cast(
                         cloudfront.IOrigin,
                         cf_origins.FunctionUrlOrigin.with_origin_access_control(

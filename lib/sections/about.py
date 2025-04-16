@@ -14,7 +14,7 @@ logger.setLevel(logging_level)
 
 @xray_recorder.capture("## About act function")
 def act(
-        _connection_thread: threading.ReturningThread, session_data: session.SessionData, _params: dict[str, str]
+    _connection_thread: threading.ReturningThread, session_data: session.SessionData, _params: dict[str, str]
 ) -> tuple[session.SessionData, list[str]]:
     return session_data, []
 
@@ -29,7 +29,7 @@ def apply_template(text: str) -> str:
 
 @xray_recorder.capture("## Building about body")
 def build(
-        connection_thread: threading.ReturningThread, session_data: dict[str, str], *_args, **_kwargs
+    connection_thread: threading.ReturningThread, session_data: dict[str, str], *_args, **_kwargs
 ) -> return_.Returnable:
     logger.debug("Starting about build")
     localization: str = session_data.get("local", "en")
