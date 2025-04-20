@@ -29,7 +29,10 @@ def act(
 
 @xray_recorder.capture("## Applying mixes template")
 def apply_template(mixes: list[Mix]) -> str:
-    template = Div(Class("tab w-2/3 m-auto space-y-16"), *(mix.render() for mix in mixes))
+    template = Div(
+        Class("tab w-2/3 m-auto space-y-16 info bg-base-200 border border-base-300 h-auto block py-5"),
+        *(mix.render() for mix in mixes),
+    )
     return template.string()
 
 
