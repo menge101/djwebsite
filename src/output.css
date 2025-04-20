@@ -1728,10 +1728,15 @@
   stroke-width: 1.0122;
   stroke: #800080;
 }
-ellipse#outercircle {
+circle.outercircle {
   fill: none;
-  stroke-width: 2.1072;
+  stroke-width: 3;
   stroke: #000;
+}
+circle#circlefill {
+  fill: none;
+  stroke-width: 8;
+  stroke: #fff;
 }
 circle#recordlabel {
   fill: #f0f;
@@ -1743,12 +1748,16 @@ path#wzl {
   stroke-width: .26458;
   stroke: #000;
 }
+path#wzl-fill {
+  stroke-width: 5.1;
+  fill: #fff;
+}
 .vinyl-lines {
   stroke: oklch(0.21 0.034 264.665);
   fill: none;
-  stroke-dasharray: 0.0914415, 0.0914415;
-  stroke-opacity: .72553;
-  stroke-width: .18288;
+  stroke-dasharray: 0.5, 0.5;
+  stroke-opacity: .82553;
+  stroke-width: .24;
 }
 @layer base {
   :where(:root),:root:has(input.theme-controller[value=light]:checked),[data-theme=light] {
