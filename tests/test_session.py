@@ -81,10 +81,10 @@ def test_act_no_session(connection_thread_mock, mocker, resource_mock, session_d
 
 
 def test_act_with_session(
-    connection_thread_mock,
-    mocker,
-    resource_mock,
-    session_data,
+        connection_thread_mock,
+        mocker,
+        resource_mock,
+        session_data,
 ):
     mocker.patch("lib.session.cookie.expiration_time", return_value=datetime.fromtimestamp(0))
     mocker.patch("lib.session.uuid1", return_value="1")
@@ -100,11 +100,11 @@ def test_build_with_invalid_session(mocker, invalid_session_data):
         session.build(mocker.Mock(name="anything"), invalid_session_data, {})
 
 
-def test_update_session_raises_client_error(connection_thread_mock, mocker, resource_mock, session_data):
+def test_create_session_raises_client_error(connection_thread_mock, mocker, resource_mock, session_data):
     class MockException(Exception):
         pass
 
     mocker.patch("lib.session.botocore.exceptions.ClientError", MockException)
     resource_mock.put_item.side_effect = MockException()
     with raises(ValueError):
-        session.update_session(connection_thread_mock, session_data)
+        session.create_session(connection_thread_mock, session_data)

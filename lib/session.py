@@ -7,14 +7,11 @@ import botocore.exceptions
 import logging
 import os
 
-
 logging_level = os.environ.get("logging_level", "DEBUG").upper()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging_level)
 
-
 SessionData = NewType("SessionData", dict[str, dict[str, str] | str])
-
 
 # Important, the key "id_" SHOULD NOT BE SET in these defaults, "id_" only gets set by code downstream from here
 DEFAULT_SESSION_VALUES: SessionData = SessionData(
@@ -27,9 +24,9 @@ DEFAULT_SESSION_VALUES: SessionData = SessionData(
 
 @xray_recorder.capture("## Creating session maybe")
 def act(
-    connection_thread: threading.ReturningThread,
-    session_data: SessionData,
-    _query_params: dict[str, str],
+        connection_thread: threading.ReturningThread,
+        session_data: SessionData,
+        _query_params: dict[str, str],
 ) -> tuple[SessionData, list[str]]:
     session_id = session_data.get("id_", None)
     if session_id:
@@ -42,16 +39,16 @@ def act(
     session_data["sk"] = session_id
     session_data["id_"] = session_id
     session_data["ttl"] = str(cookie.expiration_as_ttl(exp))
-    update_session(connection_thread=connection_thread, session_data=session_data)
+    create_session(connection_thread=connection_thread, session_data=session_data)
     return session_data, ["session-created"]
 
 
 @xray_recorder.capture("## Building session element")
 def build(
-    _connection_thread: threading.ReturningThread,
-    session_data: SessionData,
-    *_args,
-    **_kwargs,
+        _connection_thread: threading.ReturningThread,
+        session_data: SessionData,
+        *_args,
+        **_kwargs,
 ) -> return_.Returnable:
     logger.debug(f"Session build: {session_data}")
     if not session_data:
@@ -74,6 +71,20 @@ def build(
     )
     logger.debug(f"Session cookie set: {session_cookie}")
     return return_.http("", 200, cookies=[str(session_cookie)])
+
+
+@xray_recorder.capture("## Creating session data")
+def create_session(connection_thread: threading.ReturningThread, session_data: dict[str, Optional[str]]) -> None:
+    logger.debug("Writing session to ddb")
+    logger.debug(f"Session data: {session_data}")
+    _, _, ddb_tbl = cast(types.ConnectionThreadResultType, connection_thread.join())
+    try:
+        ddb_tbl.put_item(Item=session_data)
+    except botocore.exceptions.ClientError as ce:
+        logger.exception(ce)
+        logger.error("Failed to write session data")
+        raise ValueError("Improperly formatted session data, likely stemming from session corruption") from ce
+    logger.debug(f"Session written to ddb: {session_data}")
 
 
 @xray_recorder.capture("## Retrieving session data from ddb table")
@@ -101,17 +112,3 @@ def handle_session(event: dict, table_connection_thread: threading.ReturningThre
     except KeyError:
         return DEFAULT_SESSION_VALUES
     return get_session_data(session_id, table_connection_thread)
-
-
-@xray_recorder.capture("## Creating/Updating session data")
-def update_session(connection_thread: threading.ReturningThread, session_data: dict[str, Optional[str]]) -> None:
-    logger.debug("Writing session to ddb")
-    logger.debug(f"Session data: {session_data}")
-    _, _, ddb_tbl = cast(types.ConnectionThreadResultType, connection_thread.join())
-    try:
-        ddb_tbl.put_item(Item=session_data)
-    except botocore.exceptions.ClientError as ce:
-        logger.exception(ce)
-        logger.error("Failed to write session data")
-        raise ValueError("Improperly formatted session data, likely stemming from session corruption") from ce
-    logger.debug(f"Session written to ddb: {session_data}")
