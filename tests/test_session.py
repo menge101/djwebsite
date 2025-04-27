@@ -71,7 +71,7 @@ def test_act_no_session(connection_thread_mock, mocker, resource_mock, session_d
             "id_": "1",
             "pk": "session",
             "sk": "1",
-            "translate": {"local": "en", "state": "closed"},
+            "translate": {"local": "en"},
             "ttl": "0",
         },
         ["session-created"],
@@ -81,10 +81,10 @@ def test_act_no_session(connection_thread_mock, mocker, resource_mock, session_d
 
 
 def test_act_with_session(
-        connection_thread_mock,
-        mocker,
-        resource_mock,
-        session_data,
+    connection_thread_mock,
+    mocker,
+    resource_mock,
+    session_data,
 ):
     mocker.patch("lib.session.cookie.expiration_time", return_value=datetime.fromtimestamp(0))
     mocker.patch("lib.session.uuid1", return_value="1")

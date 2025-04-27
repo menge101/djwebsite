@@ -15,7 +15,7 @@ logger.setLevel(logging_level)
 
 @xray_recorder.capture("## Element template act function")
 def act(
-    _connection_thread: threading.ReturningThread, session_data: session.SessionData, params: dict[str, str]
+    connection_thread: threading.ReturningThread, session_data: session.SessionData, params: dict[str, str]
 ) -> tuple[session.SessionData, list[str]]:
     session_data = cast(session.SessionData, session_data.copy())
     logger.debug(f"session_data: {session_data}")
@@ -23,21 +23,20 @@ def act(
     # This guards against the edge case where an action is requested prior to the session being initialized
     if "id_" not in session_data or "sk" not in session_data:
         raise ValueError("Improperly formatted session data, likely stemming from session corruption")
+    if not params:
+        return session_data, []
     # logo element supports two actions
     # 1) Starting animation
     if params.get("action") == "start":
         session_data["logo"] = {"state": "rotate"}
-        events: list[str] = []
     # 2) Stopping animation
     elif params.get("action") == "stop":
         session_data["logo"] = {"state": "still"}
-        events = []
-    # If it's not one of those two, something is up
+    # If it's not one of those two, ignore it, build defaults to making it rotate when state is undefined
     else:
-        session_data["logo"] = {"state": "still"}
-        events = []
-        logger.warning(f"Invalid logo state received: {params.get('action')}")
-    return session_data, events
+        logger.info(f"Unexpected parameter(s): {params}")
+    session.update_session_thread(connection_thread, session_data, "logo")
+    return session_data, []
 
 
 @xray_recorder.capture("## Applying logo template")
