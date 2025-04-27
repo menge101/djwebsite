@@ -5,6 +5,7 @@ from typing import cast
 import lens
 import logging
 import os
+import secrets
 
 logging_level = os.environ.get("logging_level", "DEBUG").upper()
 logger = logging.getLogger(__name__)
@@ -31,12 +32,14 @@ def act(
     if params.get("form") == "clear":
         logger.debug("clear form")
         session_data["contact"] = {"form": "clear"}
+    csrf: str = generate_csrf_token()
+    session_data["contact"] = {"csrf": csrf}
     session.update_session_thread(connection_thread, session_data, "contact")
     return session_data, []
 
 
 @xray_recorder.capture("## Applying contact form template")
-def apply_form_template(localized_strings: dict[str, str]) -> str:
+def apply_form_template(localized_strings: dict[str, str], csrf_token: str) -> str:
     submit_button_script = """on keyup from closest <form/> debounced at 150ms
             if (<[required]:invalid/>).length > 0
                 add @disabled
@@ -263,6 +266,10 @@ def apply_form_template(localized_strings: dict[str, str]) -> str:
                         elements.Text(localized_strings.get("submit", "Submit")),
                     ),
                 ),
+                elements.Input(
+                    attributes.Type("hidden"),
+                    attributes.Value(csrf_token),
+                ),
             ),
         ),
     )
@@ -318,6 +325,11 @@ def build(
     if lens.focus(session_data, ["contact", "form"], default_result="clear") == "submitted":
         return return_.http(body=apply_refresh_template(localized_strings), status_code=200)
     return return_.http(body=apply_form_template(localized_strings), status_code=200)
+
+
+@xray_recorder.capture("## Generating CSRF token")
+def generate_csrf_token() -> str:
+    return str(secrets.randbits(256))
 
 
 @xray_recorder.capture("## Getting localized strings for contact")
