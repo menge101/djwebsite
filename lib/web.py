@@ -1,5 +1,6 @@
 from aws_xray_sdk.core import xray_recorder
 from aws_xray_sdk.core import patch_all
+from botocore.config import Config
 from mypy_boto3_dynamodb.client import DynamoDBClient
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource
 from typing import cast
@@ -27,18 +28,20 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 logger.setLevel(logging_level)
 
+SESSION_CONFIG = Config(retries={"max_attempts": 10, "mode": "standard"})
+
 
 @xray_recorder.capture("## Establish DDB connection thread")
 def ddb_connect(table_name: str | None) -> types.ConnectionThreadResultType:
     if not table_name:
         raise Exception("ddb_table_name env variable is not properly set")
     session = boto3.Session()
-    client = cast(DynamoDBClient, session.client("dynamodb"))
-    rsrc = cast(DynamoDBServiceResource, session.resource("dynamodb"))
+    client = cast(DynamoDBClient, session.client("dynamodb", config=SESSION_CONFIG))
+    rsrc = cast(DynamoDBServiceResource, session.resource("dynamodb", config=SESSION_CONFIG))
     return cast(types.ConnectionThreadResultType, (table_name, client, rsrc.Table(table_name)))
 
 
-@xray_recorder.capture()
+@xray_recorder.capture("## Spawn table connection thread")
 def get_table_connection() -> threading.ReturningThread:
     table_name = os.environ.get("ddb_table_name")
     table_connection_thread = threading.ReturningThread(target=ddb_connect, args=(table_name,), daemon=True)

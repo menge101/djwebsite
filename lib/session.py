@@ -1,9 +1,10 @@
 from aws_xray_sdk.core import xray_recorder
-from datetime import datetime
+from datetime import datetime, UTC
 from lib import cookie, return_, threading, types
 from typing import cast, NewType, Optional
 from uuid import uuid1
 import botocore.exceptions
+import lens
 import logging
 import os
 
@@ -20,6 +21,10 @@ DEFAULT_SESSION_VALUES: SessionData = SessionData(
         "translate": {"local": "en"},
     }
 )
+
+
+class Expired(ValueError):
+    pass
 
 
 @xray_recorder.capture("## Creating session maybe")
@@ -45,10 +50,10 @@ def act(
 
 @xray_recorder.capture("## Building session element")
 def build(
-    _connection_thread: threading.ReturningThread,
-    session_data: SessionData,
-    *_args,
-    **_kwargs,
+        _connection_thread: threading.ReturningThread,
+        session_data: SessionData,
+        *_args,
+        **_kwargs,
 ) -> return_.Returnable:
     logger.debug(f"Session build: {session_data}")
     if not session_data:
@@ -92,6 +97,8 @@ def get_session_data(session_id: str, table_connection_thread: threading.Returni
     _, _, tbl = cast(types.ConnectionThreadResultType, table_connection_thread.join())
     response = tbl.get_item(Key={"pk": "session", "sk": session_id}, ConsistentRead=True)
     logger.debug(f"Session data: {response['Item']}")
+    if lens.focus(response, ["Item", "ttl"], default_result=0) < datetime.now(UTC):
+        raise Expired()
     return cast(SessionData, response["Item"])
 
 
@@ -111,7 +118,10 @@ def handle_session(event: dict, table_connection_thread: threading.ReturningThre
         session_id = get_session_id_from_cookies(event)
     except KeyError:
         return DEFAULT_SESSION_VALUES
-    return get_session_data(session_id, table_connection_thread)
+    try:
+        return get_session_data(session_id, table_connection_thread)
+    except Expired:
+        return DEFAULT_SESSION_VALUES
 
 
 @xray_recorder.capture("## Updating permanent session store")
