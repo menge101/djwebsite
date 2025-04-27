@@ -17,16 +17,16 @@ SessionData = NewType("SessionData", dict[str, dict[str, str] | str])
 DEFAULT_SESSION_VALUES: SessionData = SessionData(
     {
         "pk": "session",
-        "translate": {"state": "closed", "local": "en"},
+        "translate": {"local": "en"},
     }
 )
 
 
 @xray_recorder.capture("## Creating session maybe")
 def act(
-        connection_thread: threading.ReturningThread,
-        session_data: SessionData,
-        _query_params: dict[str, str],
+    connection_thread: threading.ReturningThread,
+    session_data: SessionData,
+    _query_params: dict[str, str],
 ) -> tuple[SessionData, list[str]]:
     session_id = session_data.get("id_", None)
     if session_id:
@@ -45,10 +45,10 @@ def act(
 
 @xray_recorder.capture("## Building session element")
 def build(
-        _connection_thread: threading.ReturningThread,
-        session_data: SessionData,
-        *_args,
-        **_kwargs,
+    _connection_thread: threading.ReturningThread,
+    session_data: SessionData,
+    *_args,
+    **_kwargs,
 ) -> return_.Returnable:
     logger.debug(f"Session build: {session_data}")
     if not session_data:
@@ -112,3 +112,44 @@ def handle_session(event: dict, table_connection_thread: threading.ReturningThre
     except KeyError:
         return DEFAULT_SESSION_VALUES
     return get_session_data(session_id, table_connection_thread)
+
+
+@xray_recorder.capture("## Updating permanent session store")
+def update_session(connection_thread: threading.ReturningThread, session_data: SessionData, component_key: str) -> None:
+    """
+    This function provides a mechanism for updating only a specific key within the session store, this allows
+     individual components to update relevant portions of the session store without conflicting with each other.
+     However, this is not safe for any components that may manipulate the same key in the session store.  A race
+     condition would result from such a usage.
+    :param connection_thread: The thread that provides the connection to the session store
+    :param session_data: Session data used for update
+    :param component_key: The key representing a component within the session store
+    :return: None
+    """
+    tbl_name, client, _ = cast(types.ConnectionThreadResultType, connection_thread.join())
+    if component_key not in session_data.keys():
+        return None
+    response = client.update_item(
+        TableName=tbl_name,
+        Key=cast(
+            types.DynamoDBUpdateItemKey,
+            {
+                "pk": {"S": session_data["pk"]},
+                "sk": {"S": session_data["sk"]},
+            },
+        ),
+        UpdateExpression="SET #component_key = :value",
+        ExpressionAttributeNames={"#component_key": component_key},
+        ExpressionAttributeValues={":value": {"M": types.dict_to_ddb(cast(dict, session_data[component_key]))}},
+    )
+    logger.debug(f"Updated {component_key} key in permanent session store")
+    logger.debug(response)
+    return None
+
+
+@xray_recorder.capture("## Launching session update thread")
+def update_session_thread(
+    connection_thread: threading.ReturningThread, session_data: dict[str, Optional[str]], component_key: str
+) -> None:
+    t = threading.Thread(target=update_session, args=(connection_thread, session_data, component_key))
+    t.run()

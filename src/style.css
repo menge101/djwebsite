@@ -122,6 +122,11 @@ path#wzl-fill {
     fill: #fff;
 }
 
+.refresh {
+    fill: #fff;
+    stroke: #000
+}
+
 .vinyl-lines {
     stroke: oklch(0.21 0.034 264.665);
     fill: none;

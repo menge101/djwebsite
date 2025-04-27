@@ -47,7 +47,7 @@ def session_data(session_id):
         "local": "en",
         "id_": session_id,
         "sk": session_id,
-        "translate": {"state": "closed"},
+        "pk": "session",
     }
 
 

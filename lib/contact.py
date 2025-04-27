@@ -15,16 +15,23 @@ STRING_PREFIX = "contact#form#"
 
 @xray_recorder.capture("## Contact act function")
 def act(
-    _connection_thread: threading.ReturningThread, session_data: session.SessionData, params: dict[str, str]
+    connection_thread: threading.ReturningThread, session_data: session.SessionData, params: dict[str, str]
 ) -> tuple[session.SessionData, list[str]]:
     logger.debug("Contact act function")
     logger.debug(session_data)
     logger.debug(params)
     if all(
-        [key in params for key in ["date", "phone", "karaoke?", "name", "description", "location", "time", "email"]]
+        [
+            key in params.keys()
+            for key in ["date", "phone", "karaoke?", "name", "description", "location", "time", "email"]
+        ]
     ):
         logger.debug("all keys for form submission")
         session_data["contact"] = {"form": "submitted"}
+    if params.get("form") == "clear":
+        logger.debug("clear form")
+        session_data["contact"] = {"form": "clear"}
+    session.update_session_thread(connection_thread, session_data, "contact")
     return session_data, []
 
 
@@ -115,12 +122,12 @@ def apply_form_template(localized_strings: dict[str, str]) -> str:
                     attributes.Class("row-start-1 col-start-3"),
                     elements.Label(
                         attributes.Class("fieldset-label"),
-                        elements.Text(localized_strings.get("phone", "Phone")),
+                        elements.Text(localized_strings.get("phone", "Phone Number")),
                     ),
                     elements.Input(
                         attributes.Class("input validator"),
                         attributes.Type("text"),
-                        attributes.Name("Phone Number"),
+                        attributes.Name("phone"),
                         attributes.Required(),
                         # Validation supports international dialing with +1-999
                         # spaces, dashes, or nothing separators between number groups
@@ -265,30 +272,30 @@ def apply_form_template(localized_strings: dict[str, str]) -> str:
 @xray_recorder.capture("## Applying contact refresh form template")
 def apply_refresh_template(localized_strings: dict[str, str]) -> str:
     template = elements.Div(
-        attributes.Class("w-full row-span-2 justify-center flex m-auto space-y-3 h-64 cursor-pointer"),
+        attributes.Class(
+            "w-full row-span-2 justify-center flex m-auto space-y-3 h-64 cursor-pointer bg-base-200 border border-base-300"
+        ),
         htmx.Trigger("click"),
-        htmx.Get("/ui/contact"),
-        htmx.Vals("{form: clear}"),
+        htmx.Get("/ui/contact?form=clear"),
         htmx.Swap("outerHTML"),
         attributes.ID("form-base"),
         elements.Button(
-            attributes.Class("justify-center align-center m-auto"),
+            attributes.Class("justify-center align-center m-auto text-white cursor-pointer"),
             elements.SVG(
-                attributes.Attribute("viewBox", "0 0 32 32"),
+                attributes.Attribute("viewBox", "0 0 128 128"),
                 elements.Element(
                     "g",
                     attributes.ID("surface1"),
                     elements.Element(
                         "path",
+                        attributes.Class("refresh"),
                         attributes.Attribute(
                             "d",
                             (
-                                "M 16 4 C 10.886719 4 6.617188 7.160156 4.875 11.625 L 6.71875 12.375 C 8.175781"
-                                " 8.640625 11.710938 6 16 6 C 19.242188 6 22.132813 7.589844 23.9375 10 L 20 10 L 20 12 "
-                                "L 27 12 L 27 5 L 25 5 L 25 8.09375 C 22.808594 5.582031 19.570313 4 16 4 Z M 25.28125 "
-                                "19.625 C 23.824219 23.359375 20.289063 26 16 26 C 12.722656 26 9.84375 24.386719 8.03125"
-                                " 22 L 12 22 L 12 20 L 5 20 L 5 27 L 7 27 L 7 23.90625 C 9.1875 26.386719 12.394531 28 16"
-                                "28 C 21.113281 28 25.382813 24.839844 27.125 20.375 Z "
+                                "M16.08,59.26A8,8,0,0,1,0,59.26a59,59,0,0,1,97.13-45V8a8,8,0,1,1,16.08,0V33.35a8,8,0,0"
+                                ",1-8,8L80.82,43.62a8,8,0,1,1-1.44-15.95l8-.73A43,43,0,0,0,16.08,59.26Zm22.77,19.6a8,8"
+                                ",0,0,1,1.44,16l-10.08.91A42.95,42.95,0,0,0,102,63.86a8,8,0,0,1,16.08,0A59,59,0,0,1,"
+                                "22.3,110v4.18a8,8,0,0,1-16.08,0V89.14h0a8,8,0,0,1,7.29-8l25.31-2.3Z"
                             ),
                         ),
                     ),
@@ -308,7 +315,7 @@ def build(
     logger.debug(session_data)
     localization: str = session_data.get("local", "en")
     localized_strings: dict[str, str] = get_localized_strings(connection_thread, localization, STRING_PREFIX)
-    if lens.focus(session_data, ["contact", "form"], default_result="None") == "submitted":
+    if lens.focus(session_data, ["contact", "form"], default_result="clear") == "submitted":
         return return_.http(body=apply_refresh_template(localized_strings), status_code=200)
     return return_.http(body=apply_form_template(localized_strings), status_code=200)
 
