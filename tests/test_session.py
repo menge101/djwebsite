@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from pytest import fixture, raises
 from lib import session
 
@@ -26,6 +26,11 @@ def session_data_none():
 @fixture
 def session_data(base_time, session_id):
     return {"id_": session_id, "ttl": base_time.timestamp()}
+
+
+@fixture
+def session_data_expired_timestamp(session_id):
+    return {"id_": session_id, "sk": session_id, "pk": "session", "ttl": "69"}
 
 
 def test_build_no_session(connection_thread_mock, mocker, session_data_none):
@@ -56,9 +61,21 @@ def test_cookie_crumble(event_with_cookie, session_id):
 
 
 def test_handle_session(connection_thread_mock, event_with_cookie, session_id, resource_mock, table_name):
-    resource_mock.get_item.return_value = {"Item": {"id_": session_id}}
+    resource_mock.get_item.return_value = {"Item": {"id_": session_id, "ttl": 9999999999}}
     observed = session.handle_session(event_with_cookie, connection_thread_mock)
-    expected = {"id_": session_id}
+    expected = {
+        "id_": "1234567890",
+        "ttl": datetime(2286, 11, 20, 17, 46, 39, tzinfo=timezone.utc).timestamp(),
+    }
+    assert observed == expected
+
+
+def test_handle_session_expired_timestamp(
+    connection_thread_mock, event_with_cookie, session_id, resource_mock, table_name
+):
+    resource_mock.get_item.return_value = {"Item": {"id_": session_id, "ttl": 9999}}
+    observed = session.handle_session(event_with_cookie, connection_thread_mock)
+    expected = session.DEFAULT_SESSION_VALUES
     assert observed == expected
 
 

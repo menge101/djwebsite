@@ -11,4 +11,4 @@ pytest
 pytest-cov
 pytest-mock
 ruff
-simplelens
+simplelens >= 1.2.1

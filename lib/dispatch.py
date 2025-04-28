@@ -8,7 +8,6 @@ import logging
 import os
 
 from lib import return_, session, threading
-from lib.session import update_session
 
 logging_level = os.environ.get("logging_level", "DEBUG").upper()
 logger = logging.getLogger(__name__)
@@ -121,11 +120,7 @@ class Dispatcher:
             session_data, triggered_events = dispatchee.act(self.connection_thread, session_data, info.query_params)
         except ValueError as ve:
             return return_.error(ve, 500)
-        session_update_thread = threading.Thread(target=update_session, args=(self.connection_thread, session_data))
-        session_update_thread.start()
         built = dispatchee.build(self.connection_thread, session_data)
-        # Making
-        session_update_thread.join()
         return self.add_triggered_events_to_response(built, triggered_events)
 
     @xray_recorder.capture("## Validating request")
