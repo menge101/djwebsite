@@ -16,30 +16,34 @@ STRING_PREFIX = "contact#form#"
 
 @xray_recorder.capture("## Contact act function")
 def act(
-    connection_thread: threading.ReturningThread, session_data: session.SessionData, params: dict[str, str]
+        connection_thread: threading.ReturningThread, session_data: session.SessionData, params: dict[str, str]
 ) -> tuple[session.SessionData, list[str]]:
     logger.debug("Contact act function")
     logger.debug(session_data)
     logger.debug(params)
     if all(
-        [
-            key in params.keys()
-            for key in ["date", "phone", "karaoke?", "name", "description", "location", "time", "email"]
-        ]
+            [
+                key in params.keys()
+                for key in ["date", "phone", "karaoke?", "name", "description", "location", "time", "email", "csrf"]
+            ]
     ):
-        logger.debug("all keys for form submission")
-        session_data["contact"] = {"form": "submitted"}
+        logger.debug("all keys for form submission are filled")
+        try:
+            if params["csrf"] == lens.focus(session_data, ["contact", "csrf"]):
+                lens.carve(session_data, ["contact", "form"], "submitted")
+        except lens.FocusingError:
+            logger.warning(f"Attempt to check CSRF without CSRF present in session: {session_data}")
     if params.get("form") == "clear":
         logger.debug("clear form")
-        session_data["contact"] = {"form": "clear"}
-    csrf: str = generate_csrf_token()
-    session_data["contact"] = {"csrf": csrf}
+        lens.carve(session_data, ["contact", "form"], "clear")
+    lens.carve(session_data, ["contact", "csrf"], generate_csrf_token())
     session.update_session_thread(connection_thread, session_data, "contact")
     return session_data, []
 
 
 @xray_recorder.capture("## Applying contact form template")
-def apply_form_template(localized_strings: dict[str, str], csrf_token: str) -> str:
+def apply_form_template(localized_strings: dict[str, str], session_data: session.SessionData) -> str:
+    csrf_token = lens.focus(session_data, ["contact", "csrf"])
     submit_button_script = """on keyup from closest <form/> debounced at 150ms
             if (<[required]:invalid/>).length > 0
                 add @disabled
@@ -268,6 +272,7 @@ def apply_form_template(localized_strings: dict[str, str], csrf_token: str) -> s
                 ),
                 elements.Input(
                     attributes.Type("hidden"),
+                    attributes.Name("csrf"),
                     attributes.Value(csrf_token),
                 ),
             ),
@@ -316,7 +321,7 @@ def apply_refresh_template(localized_strings: dict[str, str]) -> str:
 
 @xray_recorder.capture("## Building contact body")
 def build(
-    connection_thread: threading.ReturningThread, session_data: dict[str, str], *_args, **_kwargs
+        connection_thread: threading.ReturningThread, session_data: dict[str, str], *_args, **_kwargs
 ) -> return_.Returnable:
     logger.debug("Starting contact build")
     logger.debug(session_data)
@@ -324,7 +329,7 @@ def build(
     localized_strings: dict[str, str] = get_localized_strings(connection_thread, localization, STRING_PREFIX)
     if lens.focus(session_data, ["contact", "form"], default_result="clear") == "submitted":
         return return_.http(body=apply_refresh_template(localized_strings), status_code=200)
-    return return_.http(body=apply_form_template(localized_strings), status_code=200)
+    return return_.http(body=apply_form_template(localized_strings, session_data), status_code=200)
 
 
 @xray_recorder.capture("## Generating CSRF token")
@@ -334,7 +339,7 @@ def generate_csrf_token() -> str:
 
 @xray_recorder.capture("## Getting localized strings for contact")
 def get_localized_strings(
-    connection_thread: threading.ReturningThread, localization: str, prefix: str
+        connection_thread: threading.ReturningThread, localization: str, prefix: str
 ) -> dict[str, str]:
     table_name, ddb_client, _ = cast(types.ConnectionThreadResultType, connection_thread.join())
     kce = "pk = :pkval AND begins_with ( sk, :skval )"
