@@ -207,12 +207,13 @@ def test_dispatcher_sections(client_mock, dispatcher, section_event):
 def test_dispatcher_about_section(client_mock, dispatcher, about_event):
     client_mock.query.return_value = {"Items": [{"pk": {"S": "section"}, "sk": {"S": "none"}, "name": {"S": "about"}}]}
     client_mock.get_item.return_value = {
-        "Item": {"pk": {"S": "en"}, "sk": {"S": "section#body#about"}, "text": {"S": "About body text"}}
+        "Item": {"pk": {"S": "en"}, "sk": {"S": "section#body#about"}, "text": {"S": "About body text\n\nyolo"}}
     }
     observed = dispatcher.dispatch(about_event)
     expected = {
         "body": '<div class="hero bg-base-200 min-h-96 w-2/3 tab-content m-auto"><div '
-        'class="hero-content text-center">About body text</div></div>',
+        'class="hero-content text-center flex-col w-3/4"><span>About body '
+        "text</span><span>yolo</span></div></div>",
         "cookies": [],
         "headers": {"Content-Type": "text/html"},
         "isBase64Encoded": False,

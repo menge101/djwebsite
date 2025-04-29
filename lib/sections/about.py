@@ -1,8 +1,7 @@
 from aws_xray_sdk.core import xray_recorder
-from basilico.attributes import Class
-from basilico.elements import Div, Text
+from basilico import attributes, elements
 from lib import return_, session, threading, types
-from typing import cast
+from typing import cast, TextIO
 import lens
 import logging
 import os
@@ -10,6 +9,22 @@ import os
 logging_level = os.environ.get("logging_level", "DEBUG").upper()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging_level)
+
+
+class AutoSpanText(elements.Text):
+    @staticmethod
+    def nl_to_spans(text: str) -> str:
+        dedupe = text.replace("\n\n", "\n")
+        splits = dedupe.split("\n")
+        joined = "</span><span>".join(splits)
+        bookended = f"<span>{joined}</span>"
+        return bookended
+
+    def render(self, w: TextIO):
+        if self.to_render:
+            escaped = elements.html.escape(self.text)
+            stuff = self.nl_to_spans(escaped)
+            w.write(stuff)
 
 
 @xray_recorder.capture("## About act function")
@@ -21,8 +36,9 @@ def act(
 
 @xray_recorder.capture("## Applying about template")
 def apply_template(text: str) -> str:
-    template = Div(
-        Class("hero bg-base-200 min-h-96 w-2/3 tab-content m-auto"), Div(Class("hero-content text-center"), Text(text))
+    template = elements.Div(
+        attributes.Class("hero bg-base-200 min-h-96 w-2/3 tab-content m-auto"),
+        elements.Div(attributes.Class("hero-content text-center flex-col w-3/4"), AutoSpanText(text)),
     )
     return template.string()
 
