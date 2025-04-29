@@ -61,11 +61,11 @@ def test_cookie_crumble(event_with_cookie, session_id):
 
 
 def test_handle_session(connection_thread_mock, event_with_cookie, session_id, resource_mock, table_name):
-    resource_mock.get_item.return_value = {"Item": {"id_": session_id, "ttl": 9999999999}}
+    resource_mock.get_item.return_value = {"Item": {"id_": session_id, "ttl": "9999999999"}}
     observed = session.handle_session(event_with_cookie, connection_thread_mock)
     expected = {
         "id_": "1234567890",
-        "ttl": datetime(2286, 11, 20, 17, 46, 39, tzinfo=timezone.utc).timestamp(),
+        "ttl": str(int(datetime(2286, 11, 20, 17, 46, 39, tzinfo=timezone.utc).timestamp())),
     }
     assert observed == expected
 
@@ -73,7 +73,7 @@ def test_handle_session(connection_thread_mock, event_with_cookie, session_id, r
 def test_handle_session_expired_timestamp(
     connection_thread_mock, event_with_cookie, session_id, resource_mock, table_name
 ):
-    resource_mock.get_item.return_value = {"Item": {"id_": session_id, "ttl": 9999}}
+    resource_mock.get_item.return_value = {"Item": {"id_": session_id, "ttl": "9999"}}
     observed = session.handle_session(event_with_cookie, connection_thread_mock)
     expected = session.DEFAULT_SESSION_VALUES
     assert observed == expected

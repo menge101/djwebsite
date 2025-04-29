@@ -97,7 +97,7 @@ def get_session_data(session_id: str, table_connection_thread: threading.Returni
     _, _, tbl = cast(types.ConnectionThreadResultType, table_connection_thread.join())
     response = tbl.get_item(Key={"pk": "session", "sk": session_id}, ConsistentRead=True)
     logger.debug(f"Session data: {response['Item']}")
-    if lens.focus(response, ["Item", "ttl"], default_result=0) < datetime.now(UTC).timestamp():
+    if int(lens.focus(response, ["Item", "ttl"], default_result=0)) < datetime.now(UTC).timestamp():
         raise Expired("Session expired")
     return cast(SessionData, response["Item"])
 
