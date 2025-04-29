@@ -1,11 +1,10 @@
 from aws_xray_sdk.core import xray_recorder
 from basilico import attributes, elements, htmx
-from lib import return_, session, threading, types
+from lib import return_, security, session, threading, types
 from typing import cast
 import lens
 import logging
 import os
-import secrets
 
 logging_level = os.environ.get("logging_level", "DEBUG").upper()
 logger = logging.getLogger(__name__)
@@ -16,18 +15,19 @@ STRING_PREFIX = "contact#form#"
 
 @xray_recorder.capture("## Contact act function")
 def act(
-        connection_thread: threading.ReturningThread, session_data: session.SessionData, params: dict[str, str]
+    connection_thread: threading.ReturningThread, session_data: session.SessionData, params: dict[str, str]
 ) -> tuple[session.SessionData, list[str]]:
     logger.debug("Contact act function")
     logger.debug(session_data)
     logger.debug(params)
     if all(
-            [
-                key in params.keys()
-                for key in ["date", "phone", "karaoke?", "name", "description", "location", "time", "email", "csrf"]
-            ]
+        [
+            key in params.keys()
+            for key in ["date", "phone", "karaoke?", "name", "description", "location", "time", "email", "csrf"]
+        ]
     ):
         logger.debug("all keys for form submission are filled")
+        params = security.clean_data(params)
         try:
             if params["csrf"] == lens.focus(session_data, ["contact", "csrf"]):
                 lens.carve(session_data, ["contact", "form"], "submitted")
@@ -36,7 +36,7 @@ def act(
     if params.get("form") == "clear":
         logger.debug("clear form")
         lens.carve(session_data, ["contact", "form"], "clear")
-    lens.carve(session_data, ["contact", "csrf"], generate_csrf_token())
+    lens.carve(session_data, ["contact", "csrf"], security.generate_csrf_token())
     session.update_session_thread(connection_thread, session_data, "contact")
     return session_data, []
 
@@ -321,7 +321,7 @@ def apply_refresh_template(localized_strings: dict[str, str]) -> str:
 
 @xray_recorder.capture("## Building contact body")
 def build(
-        connection_thread: threading.ReturningThread, session_data: dict[str, str], *_args, **_kwargs
+    connection_thread: threading.ReturningThread, session_data: dict[str, str], *_args, **_kwargs
 ) -> return_.Returnable:
     logger.debug("Starting contact build")
     logger.debug(session_data)
@@ -332,14 +332,9 @@ def build(
     return return_.http(body=apply_form_template(localized_strings, session_data), status_code=200)
 
 
-@xray_recorder.capture("## Generating CSRF token")
-def generate_csrf_token() -> str:
-    return str(secrets.randbits(256))
-
-
 @xray_recorder.capture("## Getting localized strings for contact")
 def get_localized_strings(
-        connection_thread: threading.ReturningThread, localization: str, prefix: str
+    connection_thread: threading.ReturningThread, localization: str, prefix: str
 ) -> dict[str, str]:
     table_name, ddb_client, _ = cast(types.ConnectionThreadResultType, connection_thread.join())
     kce = "pk = :pkval AND begins_with ( sk, :skval )"
