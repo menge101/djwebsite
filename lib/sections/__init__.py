@@ -1,6 +1,6 @@
 from aws_xray_sdk.core import xray_recorder
 from basilico import htmx
-from basilico.attributes import Aria, Class, Name, Type
+from basilico.attributes import Aria, Checked, Class, Name, Type
 from basilico.elements import Div, Element, Input
 from lib import return_, session, threading, types
 from mypy_boto3_dynamodb.client import DynamoDBClient
@@ -15,10 +15,35 @@ logger.setLevel(logging_level)
 
 
 class Section:
-    def __init__(self, name: str, localization: str, width_class: str, ddb_client: DynamoDBClient, table_name: str):
+    def __init__(
+        self, name: str, localization: str, width_class: str, active: bool, ddb_client: DynamoDBClient, table_name: str
+    ):
         self.name = name
         self.width_class = width_class
+        self.active = active
         self.label = self.get_label(name, localization, ddb_client, table_name)
+
+    @classmethod
+    def build_sections(
+        cls,
+        sections: list[dict[str, bool | str]],
+        localization: str,
+        width_class: str,
+        ddb_client: DynamoDBClient,
+        table_name: str,
+    ) -> list["Section"]:
+        logger.debug(f"Building sections: {sections}")
+        return [
+            Section(
+                cast(str, section["sk"]),
+                localization,
+                width_class,
+                cast(bool, section.get("active", False)),
+                ddb_client,
+                table_name,
+            )
+            for section in sections
+        ]
 
     @staticmethod
     def get_label(name: str, localization: str, ddb_client: DynamoDBClient, table_name: str) -> str:
@@ -29,13 +54,20 @@ class Section:
         return lens.focus(response, ["Item", "text", "S"])
 
     def render_input(self) -> Input:
-        return Input(
-            Type("radio"), Name("tab_group"), Class(f"tab min-w-fit {self.width_class}"), Aria("label", self.label)
-        )
+        children = [
+            Type("radio"),
+            Name("tab_group"),
+            Class(f"tab min-w-fit {self.width_class}"),
+            Aria("label", self.label),
+        ]
+        if self.active:
+            children.append(Checked())
+        return Input(*children)
 
     def render_content(self) -> Div:
+        klass = "tab-content tab-active" if self.active else "tab-content"
         return Div(
-            Class("tab-content"),
+            Class(klass),
             Div(
                 Class("justify-center"),
                 htmx.Get(f"/ui/sections/{self.name}"),
@@ -75,16 +107,14 @@ def build(
 @xray_recorder.capture("## Getting section data")
 def get_data(connection_thread: threading.ReturningThread, localization: str) -> list[Input | Div]:
     table_name, ddb_client, _ = cast(types.ConnectionThreadResultType, connection_thread.join())
-    section_names: list[str] = get_section_names(ddb_client, table_name)
-    width_class = f"w-1/{len(section_names)}"
-    sections: list[Section] = [
-        Section(name, localization, width_class, ddb_client, table_name) for name in section_names
-    ]
+    sections_raw: list[dict[str, bool | str]] = get_sections(ddb_client, table_name)
+    width_class = f"w-1/{len(sections_raw)}"
+    sections: list[Section] = Section.build_sections(sections_raw, localization, width_class, ddb_client, table_name)
     return package_data(sections)
 
 
 @xray_recorder.capture("## Getting section names")
-def get_section_names(ddb_client: DynamoDBClient, table_name: str) -> list[str]:
+def get_sections(ddb_client: DynamoDBClient, table_name: str) -> list[dict[str, str]]:
     kce = "pk = :pkval"
     response = ddb_client.query(
         TableName=table_name,
@@ -93,7 +123,8 @@ def get_section_names(ddb_client: DynamoDBClient, table_name: str) -> list[str]:
             ":pkval": {"S": "section"},
         },
     )
-    return lens.focus(response, ["Items", "sk", "S"])
+    sections = [types.ddb_to_dict(section) for section in response["Items"]]
+    return sections
 
 
 @xray_recorder.capture("## Packaging data")
