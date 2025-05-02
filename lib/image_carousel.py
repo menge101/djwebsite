@@ -7,7 +7,6 @@ import lens
 import logging
 import os
 
-
 logging_level = os.environ.get("logging_level", "DEBUG").upper()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging_level)
@@ -24,7 +23,7 @@ class Image:
             Class("carousel-item w-full justify-center self-center"),
             Div(
                 Class("w-auto"),
-                Img(Src(self.url), Alt(self.alt_text), Class("object-cover")),
+                Img(Src(self.url), Alt(self.alt_text), Class("object-fill")),
             ),
         )
         return template
@@ -57,15 +56,16 @@ def act(
 
 @xray_recorder.capture("## Applying Image Carousel template")
 def apply_template(images: list[Image]) -> str:
-    template = Div(
-        Class("w-auto mt-10 flex flex-col justify-center"),
+    if not images:
+        return Div(Class("invisible")).string()
+    return Div(
+        Class("w-auto mt-10 flex flex-col justify-center max-h-1/3"),
         Div(
             Class("carousel bg-neutral rounded-box space-x-4 p-4 w-auto"),
             *(image.render() for image in images),
         ),
         Div(Class("flex w-full justify-center gap-2 py-2"), *(image.render_indicator() for image in images)),
-    )
-    return template.string()
+    ).string()
 
 
 @xray_recorder.capture("## Building Image Carousel body")

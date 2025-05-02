@@ -28,3 +28,11 @@ def test_build(client_mock, connection_thread_mock, session_data):
     client_mock.query.return_value = {"Items": [{"url": {"S": "url1"}, "alt_text": {"S": "alt"}}]}
     observed = image_carousel.build(connection_thread_mock)
     assert observed["statusCode"] == 200
+
+
+def test_build_no_images(client_mock, connection_thread_mock, session_data):
+    client_mock.query.return_value = {"Items": []}
+    observed = image_carousel.build(connection_thread_mock)
+    expected = '<div class="invisible"></div>'
+    assert observed["statusCode"] == 200
+    assert observed["body"] == expected
