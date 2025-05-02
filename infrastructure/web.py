@@ -58,8 +58,8 @@ class Web(Construct):
             "bucket",
             removal_policy=removal_policy,
             auto_delete_objects=(removal_policy == RemovalPolicy.DESTROY),
+            object_ownership=s3.ObjectOwnership.BUCKET_OWNER_ENFORCED,
         )
-        bucket.grant_read(lambda_role)
         self.table = ddb.Table(
             self,
             "data",
@@ -106,6 +106,7 @@ class Web(Construct):
                     cf_origins.S3BucketOrigin.with_origin_access_control(
                         bucket=cast(s3.IBucket, bucket),
                         origin_access_control=s3_origin_access_control,
+                        origin_access_levels=[cloudfront.AccessLevel.READ, cloudfront.AccessLevel.READ_VERSIONED],
                     ),
                 ),
                 cache_policy=cache_policy,
@@ -125,7 +126,7 @@ class Web(Construct):
                     cache_policy=cache_policy,
                     origin_request_policy=origin_policy,
                     viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-                )
+                ),
             },
             domain_names=domain_names,
             certificate=certificate,
