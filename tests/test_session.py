@@ -79,6 +79,15 @@ def test_handle_session_expired_timestamp(
     assert observed == expected
 
 
+def test_handle_session_with_id_without_db_record(
+    connection_thread_mock, event_with_cookie, session_id, resource_mock, table_name
+):
+    resource_mock.get_item.return_value = {}
+    observed = session.handle_session(event_with_cookie, connection_thread_mock)
+    expected = session.DEFAULT_SESSION_VALUES
+    assert observed == expected
+
+
 def test_act_no_session(connection_thread_mock, mocker, resource_mock, session_data_none):
     mocker.patch("lib.session.cookie.expiration_time", return_value=datetime.fromtimestamp(0))
     mocker.patch("lib.session.uuid1", return_value="1")

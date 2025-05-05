@@ -27,6 +27,10 @@ class Expired(ValueError):
     pass
 
 
+class NoSession(ValueError):
+    pass
+
+
 @xray_recorder.capture("## Creating session maybe")
 def act(
     connection_thread: threading.ReturningThread,
@@ -96,7 +100,10 @@ def create_session(connection_thread: threading.ReturningThread, session_data: d
 def get_session_data(session_id: str, table_connection_thread: threading.ReturningThread) -> SessionData:
     _, _, tbl = cast(types.ConnectionThreadResultType, table_connection_thread.join())
     response = tbl.get_item(Key={"pk": "session", "sk": session_id}, ConsistentRead=True)
-    logger.debug(f"Session data: {response['Item']}")
+    logger.debug(f"Get item response: {response}")
+    if not response.get("Item"):
+        raise NoSession(f"No session found for {session_id}")
+    logger.debug(f"Session data: {response.get('Item', 'no session found')}")
     if int(lens.focus(response, ["Item", "ttl"], default_result=0)) < datetime.now(UTC).timestamp():
         raise Expired("Session expired")
     return cast(SessionData, response["Item"])
@@ -120,7 +127,7 @@ def handle_session(event: dict, table_connection_thread: threading.ReturningThre
         return DEFAULT_SESSION_VALUES
     try:
         return get_session_data(session_id, table_connection_thread)
-    except Expired:
+    except (Expired, NoSession):
         return DEFAULT_SESSION_VALUES
 
 
