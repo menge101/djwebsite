@@ -37,8 +37,8 @@ def act(
 @xray_recorder.capture("## Applying about template")
 def apply_template(text: str) -> str:
     template = elements.Div(
-        attributes.Class("hero bg-base-200 min-h-96 w-2/3 tab-content m-auto"),
-        elements.Div(attributes.Class("hero-content text-center flex-col w-3/4"), AutoSpanText(text)),
+        attributes.Class("hero bg-base-200 min-h-96 xl:w-2/3 md:w-3/4 w-full tab-content m-auto"),
+        elements.Div(attributes.Class("hero-content text-center flex-col md:w-3/4 w-15/16"), AutoSpanText(text)),
     )
     return template.string()
 

@@ -21,7 +21,7 @@ def act(
 @xray_recorder.capture("## Applying contact section template")
 def apply_template() -> str:
     template = Div(
-        Class("tab-content not-prose justify-center flex flex-col m-auto"),
+        Class("tab-content not-prose justify-center flex flex-col md:w-3/4 w-full m-auto"),
         htmx.Get("/ui/contact"),
         htmx.Trigger("load"),
         htmx.Swap("innerHTML"),

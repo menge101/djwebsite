@@ -88,7 +88,7 @@ def act(
 def apply_template(elements: list[Element]) -> str:
     template = Div(
         Class("justify-center flex"),
-        Div(Class("tabs tab-border justify-center gap-2 pb-3 text-sm font-bold w-full"), *elements),
+        Div(Class("tabs tab-border justify-center text-sm font-bold w-full"), *elements),
     )
     return template.string()
 

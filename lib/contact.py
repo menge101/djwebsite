@@ -59,23 +59,23 @@ def apply_form_template(localized_strings: dict[str, str], session_data: session
         htmx.Swap("outerHTML"),
         attributes.ID("booking"),
         elements.Div(
-            attributes.Class("w-full row-span-2 justify-center flex m-auto space-y-3"),
+            attributes.Class("justify-center flex-row flex flex-wrap space-y-3"),
             elements.FieldSet(
                 attributes.Class(
-                    "fieldset w-3/4 bg-base-200 border border-base-300 p-4 rounded-box "
-                    "place-content-center grid grid-rows-1 grid-cols-3"
+                    "fieldset w-full lg:w-3/4 bg-base-200 border border-base-300 p-4 "
+                    "rounded-box place-content-center flex flex-wrap space-x-3"
                 ),
                 elements.Legend(
                     attributes.Class("fieldset-legend"),
                     elements.Text(localized_strings.get("contact_details", "Contact Details")),
                 ),
                 elements.Div(
-                    attributes.Class("row-start-1 row-end-1 col-start-1"),
+                    attributes.Class("w-2/3 md:w-1/4 min-w-38"),
                     elements.Label(
                         attributes.Class("fieldset-label"), elements.Text(localized_strings.get("name", "Name"))
                     ),
                     elements.Input(
-                        attributes.Class("input validator"),
+                        attributes.Class("input validator w-full"),
                         attributes.Type("text"),
                         attributes.Name("name"),
                         attributes.Required(),
@@ -83,13 +83,13 @@ def apply_form_template(localized_strings: dict[str, str], session_data: session
                     ),
                 ),
                 elements.Div(
-                    attributes.Class("row-start-1 col-start-2"),
+                    attributes.Class("w-2/3 md:w-1/4 min-w-38 md:min-w-60"),
                     elements.Label(
                         attributes.Class("fieldset-label"),
                         elements.Text(localized_strings.get("email", "Email")),
                     ),
                     elements.Label(
-                        attributes.Class("input validator"),
+                        attributes.Class("input validator w-full"),
                         elements.SVG(
                             attributes.Class("h-[1em] opacity-50"),
                             attributes.Attribute("viewBox", "0 0 24 24"),
@@ -118,6 +118,7 @@ def apply_form_template(localized_strings: dict[str, str], session_data: session
                             attributes.Placeholder("mail@site.com"),
                             attributes.Name("email"),
                             attributes.Required(),
+                            attributes.Class("fbc-has-badge fbc-UID_1 w-full"),
                         ),
                     ),
                     elements.Div(
@@ -126,7 +127,7 @@ def apply_form_template(localized_strings: dict[str, str], session_data: session
                     ),
                 ),
                 elements.Div(
-                    attributes.Class("row-start-1 col-start-3"),
+                    attributes.Class("w-2/3 md:w-1/4 min-w-38"),
                     elements.Label(
                         attributes.Class("fieldset-label"),
                         elements.Text(localized_strings.get("phone", "Phone Number")),
@@ -145,19 +146,21 @@ def apply_form_template(localized_strings: dict[str, str], session_data: session
             ),
         ),
         elements.Div(
-            attributes.Class("w-full place-content-center m-auto p-4 rounded-box"),
+            attributes.Class("w-full justify-center place-content-center m-auto p-4 rounded-box flex flex-wrap"),
             elements.FieldSet(
                 attributes.Class(
-                    "fieldset w-3/4 m-auto grid-cols-3 grid-rows-1 grid bg-base-200 border border-base-300"
+                    "fieldset w-full lg:w-3/4 px-3 m-auto bg-base-200 border border-base-300 flex flex-wrap content-center"
                 ),
                 elements.Legend(
                     attributes.Class("fieldset-legend"),
                     elements.Text(localized_strings.get("event_details", "Event Details")),
                 ),
                 elements.Div(
-                    attributes.Class("grid-col[1]"),
+                    attributes.Class(
+                        "flex flex-wrap w-full md:w-1/3 min-w-45 justify-center md:justify-items-start space-x-3"
+                    ),
                     elements.Div(
-                        attributes.Class("row[1]"),
+                        attributes.Class("w-1/4 min-w-40"),
                         elements.Label(
                             attributes.Class("fieldset-label"),
                             elements.Text(localized_strings.get("date", "Date")),
@@ -171,7 +174,7 @@ def apply_form_template(localized_strings: dict[str, str], session_data: session
                         ),
                     ),
                     elements.Div(
-                        attributes.Class("row-[2]"),
+                        attributes.Class("w-1/4 min-w-40"),
                         elements.Label(
                             attributes.Class("fieldset-label"),
                             elements.Text(localized_strings.get("time", "Time")),
@@ -185,7 +188,7 @@ def apply_form_template(localized_strings: dict[str, str], session_data: session
                         ),
                     ),
                     elements.Div(
-                        attributes.Class("row-[3]"),
+                        attributes.Class("w-1/4 min-w-40"),
                         elements.Label(
                             attributes.Class("fieldset-label"),
                             elements.Text(localized_strings.get("duration", "Duration")),
@@ -204,7 +207,7 @@ def apply_form_template(localized_strings: dict[str, str], session_data: session
                                     attributes.Required(),
                                 ),
                                 elements.Div(
-                                    attributes.Class("flex justify-between px-2.5 mt-2 text-xs"),
+                                    attributes.Class("flex justify-between px-2.5 mt-2 text-xs w-full"),
                                     elements.Span(elements.Text("0")),
                                     elements.Span(elements.Text("2")),
                                     elements.Span(elements.Text("4")),
@@ -216,14 +219,14 @@ def apply_form_template(localized_strings: dict[str, str], session_data: session
                     ),
                 ),
                 elements.Div(
-                    attributes.Class("grid-col[2], col-span-2"),
+                    attributes.Class("w-full md:w-1/2 grow flex flex-col"),
                     elements.Div(
                         elements.Label(
                             attributes.Class("fieldset-label"),
                             elements.Text(localized_strings.get("location", "Location")),
                         ),
                         elements.Textarea(
-                            attributes.Class("textarea h-18 validator"),
+                            attributes.Class("textarea h-18 validator w-1/4 min-w-75"),
                             attributes.Name("location"),
                             attributes.Required(),
                             attributes.MinLength("3"),
@@ -234,14 +237,14 @@ def apply_form_template(localized_strings: dict[str, str], session_data: session
                         elements.Text(localized_strings.get("event_type", "What kind of event is this?")),
                     ),
                     elements.Textarea(
-                        attributes.Class("textarea h-24 w-full validator"),
+                        attributes.Class("textarea h-24 w-full min-w-75 validator"),
                         attributes.Name("description"),
                         attributes.Required(),
                         # Validation checks for seven or more characters
                         attributes.MinLength("7"),
                     ),
                     elements.FieldSet(
-                        attributes.Class("fieldset w-64"),
+                        attributes.Class("fieldset w-full lg:w-1/2"),
                         elements.Legend(
                             attributes.Class("fieldset-label"),
                             elements.Text(localized_strings.get("karaoke", "Karaoke?")),
@@ -260,7 +263,7 @@ def apply_form_template(localized_strings: dict[str, str], session_data: session
                     ),
                 ),
                 elements.Div(
-                    attributes.Class("col-start-2 col-end-2 col-span-1 content-center m-auto align-top"),
+                    attributes.Class("justify-center w-full lg:w-2/3 flex"),
                     elements.Button(
                         attributes.Type("submit"),
                         attributes.FormAttr("booking"),
