@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="./output.css">
+    <link rel="icon" type="image/x-icon" href="./wzl.ico">
+    <script src="./htmx.min.js"></script>
+    <script src="./hyperscript_0_9_14.min.js"></script>
+    <title>WZL</title>
+</head>
+<body>
+<div class="justify-center flex">
+    <div class="tabs tab-border justify-center gap-2 pb-3 text-sm font-bold w-full">
+        <input type="radio"
+               name="tab_group"
+               class="tab min-w-fit w-1/4"
+               aria-label="About"
+               checked="">
+        <div class="tab-content tab-active">
+            <div class="justify-center" hx-get="/ui/sections/about" hx-trigger="revealed" hx-swap="innerHTML"
+                 data-hx-revealed="true">
+                <div class="hero bg-base-200 min-h-96 xl:w-2/3 md:w-3/4 w-full tab-content m-auto">
+                    <div class="hero-content text-center flex-col md:w-3/4 w-15/16"><span>I started DJing in 2020 during the pandemic, looking for something new to dive into while spending more time at home. </span><span>What started as a hobby quickly turned into a passion, and in 2022, I played my first big event at the Green Dress Run in Las Vegas, hosted by the Las Vegas Hash House Harriers.</span><span>I love the energy of live music and the moment when someone hears a track they know—but with a fresh twist, a remix, or a mashup that makes it feel brand new.</span><span>My sets are a mix of progressive house, happy hardcore, and nu-disco, and anything else I dig.</span><span>I am always aiming to keep the vibe high and the crowd moving.</span><span>Let’s make some noise. 🎶🔥</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <input type="radio" name="tab_group" class="tab min-w-fit w-1/4" aria-label="Contact">
+        <div class="tab-content">
+            <div class="justify-center" hx-get="/ui/sections/contact" hx-trigger="revealed" hx-swap="innerHTML"
+                 data-hx-revealed="true">
+                <div class="tab-content not-prose justify-center flex flex-col md:w-3/4 w-full m-auto"
+                     hx-get="/ui/contact"
+                     hx-trigger="load" hx-swap="innerHTML">
+                    <form hx-get="/ui/contact" hx-trigger="submit" hx-swap="outerHTML" id="booking">
+                        <div class="justify-center flex-row flex flex-wrap space-y-3">
+                            <fieldset
+                                    class="fieldset w-full lg:w-3/4 bg-base-200 border border-base-300 p-4 rounded-box place-content-center flex flex-wrap space-x-3">
+                                <legend class="fieldset-legend">Contact Details</legend>
+                                <div class="w-2/3 md:w-1/4 min-w-38">
+                                    <label class="fieldset-label">Name</label>
+                                    <input class="input validator w-full" type="text" name="name" required=""
+                                           pattern="[a-zA-Z ]{2,}">
+                                </div>
+                                <div class="w-2/3 md:w-1/4 min-w-38 md:min-w-60">
+                                    <label class="fieldset-label">Email</label>
+                                    <label class="input validator w-full">
+                                        <svg class="h-[1em] opacity-50" viewBox="0 0 24 24">
+                                            <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5"
+                                               fill="none"
+                                               stroke="currentColor">
+                                                <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                                                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                                            </g>
+                                        </svg>
+                                        <input type="email" placeholder="mail@site.com" name="email" required=""
+                                               class="fbc-has-badge fbc-UID_1 w-full">
+                                    </label>
+                                    <div class="validator-hint hidden">Enter valid email address</div>
+                                </div>
+                                <div class="w-2/3 md:w-1/4 min-w-38">
+                                    <label class="fieldset-label">Phone</label>
+                                    <input
+                                            class="input validator w-full" type="text" name="phone" required=""
+                                            pattern="[\)\d\-\s\+\(]{10,}">
+                                </div>
+                            </fieldset>
+                        </div>
+                        <div class="w-full justify-center place-content-center m-auto p-4 rounded-box flex flex-wrap">
+                            <fieldset
+                                    class="fieldset w-full lg:w-3/4 px-3 m-auto bg-base-200 border border-base-300 flex flex-wrap content-center">
+                                <legend class="fieldset-legend">Event Details</legend>
+                                <div class="flex flex-wrap w-full md:w-1/3 min-w-45 justify-center md:justify-items-start space-x-3">
+                                    <div class="w-1/4 min-w-40">
+                                        <label class="fieldset-label">Date</label>
+                                        <input type="date"
+                                               class="input validator w-full"
+                                               name="date"
+                                               required="">
+                                    </div>
+                                    <div class="w-1/4 min-w-40">
+                                        <label class="fieldset-label">Time</label>
+                                        <input type="time"
+                                               class="input validator w-full"
+                                               name="time"
+                                               required="">
+                                    </div>
+                                    <div class="w-1/4 min-w-40">
+                                        <label class="fieldset-label">Duration</label>
+                                        <div class="w-1/4 min-w-40">
+                                            <input
+                                                    type="range" min="0" max="8" value="1" class="range w-full" step="1"
+                                                    required="">
+                                            <div class="flex justify-between px-2.5 mt-2 text-xs w-full">
+                                                <span>0</span><span>2</span><span>4</span><span>6</span><span>8+</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="w-full md:w-1/2 grow flex flex-col">
+                                    <div>
+                                        <label class="fieldset-label">Location</label>
+                                        <textarea
+                                                class="textarea h-18 validator w-1/4 min-w-75" name="location"
+                                                required=""
+                                                minlength="3">
+                                        </textarea>
+                                    </div>
+                                    <div>
+                                        <label class="fieldset-label">What kind of event is this?</label>
+                                        <textarea
+                                                class="textarea h-24 w-full min-w-75 validator" name="description"
+                                                required=""
+                                                minlength="7">
+                                    </textarea>
+                                    </div>
+
+                                    <fieldset class="fieldset w-full lg:w-1/2">
+                                        <legend class="fieldset-label">Karaoke?</legend>
+                                        <label class="fieldset-label pt-4">
+                                            No<input type="checkbox" checked=""
+                                                     class="toggle"
+                                                     name="karaoke?">Yes
+                                        </label>
+                                    </fieldset>
+                                </div>
+                                <div class="justify-center w-full lg:w-2/3 flex">
+                                    <button type="submit" form="booking" class="btn btn-soft btn-success justify-center"
+                                            _="on keyup from closest <form/> debounced at 150ms
+            if (<[required]:invalid/>).length > 0
+                add @disabled
+                put 'Check All Fields' into me
+                then exit
+            end
+            remove @disabled
+            put 'Submit' into me
+                        " disabled="">Submit
+                                    </button>
+                                </div>
+                                <input type="hidden" name="csrf"
+                                       value="38698830779488722412948915537721152720857041833866009973880539681267846686482">
+                            </fieldset>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <input type="radio" name="tab_group" class="tab min-w-fit w-1/4" aria-label="Mixes">
+        <div class="tab-content">
+            <div class="justify-center" hx-get="/ui/sections/mixes" hx-trigger="revealed" hx-swap="innerHTML"
+                 data-hx-revealed="true">
+                <div class="tab-content not-prose justify-center flex flex-col m-auto w-full"
+                     hx-get="/ui/mixes"
+                     hx-trigger="load" hx-swap="innerHTML">
+                    <div class="tab xl:w-2/3 md:w-3/4 w-full m-auto space-y-16 info bg-base-200 border border-base-300 h-auto block py-5">
+                        <iframe class="h-auto w-full"
+                                src="https://player-widget.mixcloud.com/widget/iframe/?feed=%2Fmenge101%2Ffuture-house-mix%2F"></iframe>
+                        <iframe class="h-auto w-full"
+                                src="https://player-widget.mixcloud.com/widget/iframe/?feed=%2Fmenge101%2Fdisco-funk%2F"></iframe>
+                        <iframe class="h-auto w-full"
+                                src="https://player-widget.mixcloud.com/widget/iframe/?feed=%2Fmenge101%2Fallied%2F"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

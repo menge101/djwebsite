@@ -21,7 +21,7 @@ def act(
 @xray_recorder.capture("## Applying mixes section template")
 def apply_template() -> str:
     template = Div(
-        Class("tab-content not-prose justify-center flex flex-col m-auto"),
+        Class("tab-content not-prose justify-center flex flex-col m-auto w-full"),
         htmx.Get("/ui/mixes"),
         htmx.Trigger("load"),
         htmx.Swap("innerHTML"),
