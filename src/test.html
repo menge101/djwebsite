@@ -15,7 +15,7 @@
      class="invisible">
 </div>
 <div hx-get="/ui/logo"
-     hx-trigger="load"
+     hx-trigger="session-created from:body, session-found from:body"
      hx-swap="outerHTML"
      class="html-read">
     <svg class="block-centered w-48" viewBox="0 0 127 127">
@@ -52,7 +52,7 @@
     </svg>
 </div>
 <div hx-get="/ui/images"
-     hx-trigger="load"
+     hx-trigger="session-created from:body, session-found from:body"
      hx-swap="innerHTML"
      class="not-prose justify-center flex w-3xl m-auto">
     <div class="w-auto mt-10 flex flex-col justify-center">
@@ -63,7 +63,7 @@
     </div>
 </div>
 <div hx-get="/ui/sections"
-     hx-trigger="load"
+     hx-trigger="session-created from:body, session-found from:body"
      hx-swap="outerHTML"
      class="flex-col justify-center">
     <div class="skeleton h-32 w-96 mb-2 m-auto"></div>
