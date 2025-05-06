@@ -15,7 +15,7 @@ logger.setLevel(logging_level)
 
 @xray_recorder.capture("## Element template act function")
 def act(
-    connection_thread: threading.ReturningThread, session_data: session.SessionData, params: dict[str, str]
+        connection_thread: threading.ReturningThread, session_data: session.SessionData, params: dict[str, str]
 ) -> tuple[session.SessionData, list[str]]:
     session_data = cast(session.SessionData, session_data.copy())
     logger.debug(f"session_data: {session_data}")
@@ -53,7 +53,7 @@ def apply_template(rotating: bool) -> str:
         Class("logo"),
         SVG(
             Class("block-centered w-48"),
-            Attribute("viewBox", "-1 -2 132 133"),
+            Attribute("viewBox", "-2 -2 132 132"),
             Element(
                 "defs",
                 Element(
@@ -232,7 +232,7 @@ def apply_template(rotating: bool) -> str:
 
 @xray_recorder.capture("## Building logo body")
 def build(
-    _connection_thread: threading.ReturningThread, session_data: dict[str, str], *_args, **_kwargs
+        _connection_thread: threading.ReturningThread, session_data: dict[str, str], *_args, **_kwargs
 ) -> return_.Returnable:
     logger.debug("Starting logo build")
     rotating = lens.focus(session_data, ["logo", "state"], default_result="rotate") == "rotate"
