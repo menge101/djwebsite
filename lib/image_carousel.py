@@ -33,13 +33,15 @@ class Image:
             Href(f"#image{id(self)}"),
             SVG(
                 Attribute("viewBox", "0 0 100 100"),
-                Class("carousel-indicator btn btn-xs"),
+                Class("carousel-indicator btn btn-xs border-base-200 hover:bg-base-300"),
                 Element(
                     "ellipse",
                     Attribute("cx", "50"),
                     Attribute("cy", "50"),
                     Attribute("rx", "10"),
                     Attribute("ry", "10"),
+                    Attribute("height", "18px"),
+                    Attribute("width", "18px"),
                     Class("carousel-indicator"),
                 ),
             ),
@@ -61,10 +63,10 @@ def apply_template(images: list[Image]) -> str:
     return Div(
         Class("w-auto mt-10 flex flex-col justify-center max-h-1/3"),
         Div(
-            Class("carousel bg-neutral rounded-box space-x-4 p-4 w-auto"),
+            Class("carousel bg-base-200 rounded-box space-x-4 p-4 w-auto"),
             *(image.render() for image in images),
         ),
-        Div(Class("flex w-full justify-center gap-2 py-2"), *(image.render_indicator() for image in images)),
+        Div(Class("flex w-full justify-center gap-4 py-2"), *(image.render_indicator() for image in images)),
     ).string()
 
 

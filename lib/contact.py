@@ -59,18 +59,17 @@ def apply_form_template(localized_strings: dict[str, str], session_data: session
         htmx.Swap("outerHTML"),
         attributes.ID("booking"),
         elements.Div(
-            attributes.Class("justify-center flex-row flex flex-wrap space-y-3"),
+            attributes.Class("justify-center flex-row flex flex-wrap space-y-3 md:p-4 w-full m-auto"),
             elements.FieldSet(
                 attributes.Class(
-                    "fieldset w-full lg:w-3/4 bg-base-200 border border-base-300 p-4 "
-                    "rounded-box place-content-center flex flex-wrap space-x-3"
+                    "fieldset md:p-4 bg-base-200 border border-base-300 p-4 rounded-box place-content-center flex flex-col lg:flex-row lg:space-x-4 justify-center m-auto w-full"
                 ),
                 elements.Legend(
                     attributes.Class("fieldset-legend"),
                     elements.Text(localized_strings.get("contact_details", "Contact Details")),
                 ),
                 elements.Div(
-                    attributes.Class("w-2/3 md:w-1/4 min-w-38"),
+                    attributes.Class("w-2/3 lg:w-1/4 min-w-60 max-lg:m-auto"),
                     elements.Label(
                         attributes.Class("fieldset-label"), elements.Text(localized_strings.get("name", "Name"))
                     ),
@@ -83,7 +82,7 @@ def apply_form_template(localized_strings: dict[str, str], session_data: session
                     ),
                 ),
                 elements.Div(
-                    attributes.Class("w-2/3 md:w-1/4 min-w-38 md:min-w-60"),
+                    attributes.Class("w-2/3 lg:w-1/4 min-w-60 max-lg:m-auto"),
                     elements.Label(
                         attributes.Class("fieldset-label"),
                         elements.Text(localized_strings.get("email", "Email")),
@@ -127,13 +126,13 @@ def apply_form_template(localized_strings: dict[str, str], session_data: session
                     ),
                 ),
                 elements.Div(
-                    attributes.Class("w-2/3 md:w-1/4 min-w-38"),
+                    attributes.Class("w-2/3 lg:w-1/4 min-w-60 max-lg:m-auto"),
                     elements.Label(
                         attributes.Class("fieldset-label"),
                         elements.Text(localized_strings.get("phone", "Phone Number")),
                     ),
                     elements.Input(
-                        attributes.Class("input validator"),
+                        attributes.Class("input validator w-full"),
                         attributes.Type("text"),
                         attributes.Name("phone"),
                         attributes.Required(),
@@ -146,10 +145,10 @@ def apply_form_template(localized_strings: dict[str, str], session_data: session
             ),
         ),
         elements.Div(
-            attributes.Class("w-full justify-center place-content-center m-auto p-4 rounded-box flex flex-wrap"),
+            attributes.Class("w-full justify-center place-content-center m-auto lg:p-4 rounded-box flex flex-wrap"),
             elements.FieldSet(
                 attributes.Class(
-                    "fieldset w-full lg:w-3/4 px-3 m-auto bg-base-200 border border-base-300 flex flex-wrap content-center"
+                    "fieldset w-full px-3 m-auto bg-base-200 border border-base-300 flex flex-col content-center"
                 ),
                 elements.Legend(
                     attributes.Class("fieldset-legend"),
@@ -157,126 +156,136 @@ def apply_form_template(localized_strings: dict[str, str], session_data: session
                 ),
                 elements.Div(
                     attributes.Class(
-                        "flex flex-wrap w-full md:w-1/3 min-w-45 justify-center md:justify-items-start space-x-3"
+                        "flex flex-col lg:flex-row justify-center w-full m-auto content-start items-start justify-center lg:space-x-4"
                     ),
                     elements.Div(
-                        attributes.Class("w-1/4 min-w-40"),
-                        elements.Label(
-                            attributes.Class("fieldset-label"),
-                            elements.Text(localized_strings.get("date", "Date")),
-                        ),
-                        elements.Input(
-                            attributes.Type("date"),
-                            attributes.Class("input validator"),
-                            attributes.Name("date"),
-                            attributes.Required(),
-                            # No validator pattern because apparently html doesn't apply it to date type inputs
-                        ),
-                    ),
-                    elements.Div(
-                        attributes.Class("w-1/4 min-w-40"),
-                        elements.Label(
-                            attributes.Class("fieldset-label"),
-                            elements.Text(localized_strings.get("time", "Time")),
-                        ),
-                        elements.Input(
-                            attributes.Type("time"),
-                            attributes.Class("input validator"),
-                            attributes.Name("time"),
-                            attributes.Required(),
-                            # No validation pattern because input handles it
-                        ),
-                    ),
-                    elements.Div(
-                        attributes.Class("w-1/4 min-w-40"),
-                        elements.Label(
-                            attributes.Class("fieldset-label"),
-                            elements.Text(localized_strings.get("duration", "Duration")),
-                        ),
-                        elements.Div(
-                            attributes.Class("w-full max-w-xs"),
+                        attributes.Class("flex flex-col w-full lg:w-4/12 min-w-45 justify-center max-lg:m-auto"),
+                        elements.FieldSet(
+                            attributes.Class("fieldset w-full min-w-40"),
                             elements.Label(
-                                attributes.Class("fieldset-label block"),
-                                elements.Input(
-                                    attributes.Type("range"),
-                                    attributes.Min("0"),
-                                    attributes.Max("8"),
-                                    attributes.Value("1"),
-                                    attributes.Class("range"),
-                                    attributes.Step("1"),
-                                    attributes.Required(),
-                                ),
-                                elements.Div(
-                                    attributes.Class("flex justify-between px-2.5 mt-2 text-xs w-full"),
-                                    elements.Span(elements.Text("0")),
-                                    elements.Span(elements.Text("2")),
-                                    elements.Span(elements.Text("4")),
-                                    elements.Span(elements.Text("6")),
-                                    elements.Span(elements.Text("8+")),
-                                ),
+                                attributes.Class("fieldset-label"),
+                                elements.Text(localized_strings.get("date", "Date")),
                             ),
-                        ),
-                    ),
-                ),
-                elements.Div(
-                    attributes.Class("w-full md:w-1/2 grow flex flex-col"),
-                    elements.Div(
-                        elements.Label(
-                            attributes.Class("fieldset-label"),
-                            elements.Text(localized_strings.get("location", "Location")),
-                        ),
-                        elements.Textarea(
-                            attributes.Class("textarea h-18 validator w-1/4 min-w-75"),
-                            attributes.Name("location"),
-                            attributes.Required(),
-                            attributes.MinLength("3"),
-                        ),
-                    ),
-                    elements.Label(
-                        attributes.Class("fieldset-label"),
-                        elements.Text(localized_strings.get("event_type", "What kind of event is this?")),
-                    ),
-                    elements.Textarea(
-                        attributes.Class("textarea h-24 w-full min-w-75 validator"),
-                        attributes.Name("description"),
-                        attributes.Required(),
-                        # Validation checks for seven or more characters
-                        attributes.MinLength("7"),
-                    ),
-                    elements.FieldSet(
-                        attributes.Class("fieldset w-full lg:w-1/2"),
-                        elements.Legend(
-                            attributes.Class("fieldset-label"),
-                            elements.Text(localized_strings.get("karaoke", "Karaoke?")),
-                        ),
-                        elements.Label(
-                            attributes.Class("fieldset-label pt-4"),
-                            elements.Text(localized_strings.get("no", "No")),
                             elements.Input(
-                                attributes.Type("checkbox"),
-                                attributes.Checked(),
-                                attributes.Class("toggle"),
-                                attributes.Name("karaoke?"),
+                                attributes.Type("date"),
+                                attributes.Class("input validator w-full"),
+                                attributes.Name("date"),
+                                attributes.Required(),
+                                # No validator pattern because apparently html doesn't apply it to date type inputs
                             ),
-                            elements.Text(localized_strings.get("yes", "Yes")),
+                        ),
+                        elements.FieldSet(
+                            attributes.Class("fieldset w-full min-w-40"),
+                            elements.Label(
+                                attributes.Class("fieldset-label"),
+                                elements.Text(localized_strings.get("time", "Time")),
+                            ),
+                            elements.Input(
+                                attributes.Type("time"),
+                                attributes.Class("input validator w-full"),
+                                attributes.Name("time"),
+                                attributes.Required(),
+                                # No validation pattern because input handles it
+                            ),
+                        ),
+                        elements.FieldSet(
+                            attributes.Class("fieldset w-full min-w-40"),
+                            elements.Label(
+                                attributes.Class("fieldset-label"),
+                                elements.Text(localized_strings.get("duration", "Duration")),
+                            ),
+                            elements.Div(
+                                attributes.Class("w-full lg:max-w-xs"),
+                                elements.Label(
+                                    attributes.Class("fieldset-label block"),
+                                    elements.Input(
+                                        attributes.Type("range"),
+                                        attributes.Min("0"),
+                                        attributes.Max("8"),
+                                        attributes.Value("1"),
+                                        attributes.Class("range w-full"),
+                                        attributes.Step("1"),
+                                        attributes.Required(),
+                                    ),
+                                    elements.Div(
+                                        attributes.Class("flex justify-between px-2.5 mt-2 text-xs w-full"),
+                                        elements.Span(elements.Text("0")),
+                                        elements.Span(elements.Text("2")),
+                                        elements.Span(elements.Text("4")),
+                                        elements.Span(elements.Text("6")),
+                                        elements.Span(elements.Text("8+")),
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ),
+                    elements.Div(
+                        attributes.Class("w-full lg:w-5/12 grow flex flex-col"),
+                        elements.FieldSet(
+                            attributes.Class("fieldset mb-2"),
+                            elements.Label(
+                                attributes.Class("fieldset-label"),
+                                elements.Text(localized_strings.get("location", "Location")),
+                            ),
+                            elements.Textarea(
+                                attributes.Class("textarea h-18 validator w-full md:w-1/4 min-w-75"),
+                                attributes.Name("location"),
+                                attributes.Required(),
+                                attributes.MinLength("3"),
+                            ),
+                        ),
+                        elements.FieldSet(
+                            attributes.Class("fieldset mb-2 mt-2"),
+                            elements.Label(
+                                attributes.Class("fieldset-label"),
+                                elements.Text(localized_strings.get("event_type", "What kind of event is this?")),
+                            ),
+                            elements.Textarea(
+                                attributes.Class("textarea h-24 w-full min-w-75 validator"),
+                                attributes.Name("description"),
+                                attributes.Required(),
+                                # Validation checks for seven or more characters
+                                attributes.MinLength("7"),
+                            ),
+                        ),
+                        elements.FieldSet(
+                            attributes.Class("fieldset w-full lg:w-1/2 mt-2"),
+                            elements.Legend(
+                                attributes.Class("fieldset-label"),
+                                elements.Text(localized_strings.get("karaoke", "Karaoke?")),
+                            ),
+                            elements.Label(
+                                attributes.Class("fieldset-label pt-4"),
+                                elements.Text(localized_strings.get("no", "No")),
+                                elements.Input(
+                                    attributes.Type("checkbox"),
+                                    attributes.Checked(),
+                                    attributes.Class("toggle"),
+                                    attributes.Name("karaoke?"),
+                                ),
+                                elements.Text(localized_strings.get("yes", "Yes")),
+                            ),
                         ),
                     ),
                 ),
                 elements.Div(
-                    attributes.Class("justify-center w-full lg:w-2/3 flex"),
-                    elements.Button(
-                        attributes.Type("submit"),
-                        attributes.FormAttr("booking"),
-                        attributes.Class("btn btn-soft btn-success"),
-                        attributes.Attribute("_", submit_button_script),
-                        attributes.Disabled(),
-                        elements.Text(localized_strings.get("submit", "Submit")),
+                    attributes.Class("flex justify-center"),
+                    elements.Div(
+                        attributes.Class("justify-center w-full lg:w-2/3 flex"),
+                        elements.Button(
+                            attributes.Type("submit"),
+                            attributes.FormAttr("booking"),
+                            attributes.Class("btn btn-soft btn-success"),
+                            attributes.Attribute("_", submit_button_script),
+                            attributes.Disabled(),
+                            elements.Text(localized_strings.get("submit", "Submit")),
+                        ),
                     ),
-                ),
-                elements.Input(
-                    attributes.Type("hidden"),
-                    attributes.Name("csrf"),
-                    attributes.Value(csrf_token),
+                    elements.Input(
+                        attributes.Type("hidden"),
+                        attributes.Name("csrf"),
+                        attributes.Value(csrf_token),
+                    ),
                 ),
             ),
         ),

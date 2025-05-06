@@ -47,8 +47,6 @@
     fill: var(--color-primary);
     stroke-width: 50.0;
     stroke: var(--color-accent);
-    height: inherit;
-    width: inherit;
 }
 
 .logo-mask {
@@ -95,36 +93,23 @@
 circle.outercircle {
     fill: none;
     stroke-width: 3;
-    stroke: #000
 }
 
 circle#circlefill {
     fill: none;
     stroke-width: 8;
-    stroke: #fff
 }
 
 circle#recordlabel {
     fill: #f0f;
 }
 
-circle#spindlehole {
-    fill: #fff;
-}
-
 path#wzl {
     stroke-width: .26458;
-    stroke: #000
 }
 
 path#wzl-fill {
     stroke-width: 5.1;
-    fill: #fff;
-}
-
-.refresh {
-    fill: #fff;
-    stroke: #000
 }
 
 .vinyl-lines {
