@@ -53,11 +53,16 @@ class Section:
         )
         return lens.focus(response, ["Item", "text", "S"])
 
-    def render_input(self) -> Input:
+    def render_input(self, is_first: bool, is_last: bool) -> Input:
+        class_string = f"tab min-w-fit {self.width_class}"
+        if is_first:
+            class_string += " md:pl-30 lg:pl-50"
+        if is_last:
+            class_string += " md:pr-30 rg:pr-50"
         children = [
             Type("radio"),
             Name("tab_group"),
-            Class(f"tab min-w-fit {self.width_class}"),
+            Class(class_string),
             Aria("label", self.label),
         ]
         if self.active:
@@ -130,7 +135,9 @@ def get_sections(ddb_client: DynamoDBClient, table_name: str) -> list[dict[str, 
 @xray_recorder.capture("## Packaging data")
 def package_data(sections: list[Section]) -> list[Input | Div]:
     elements: list[Input | Div] = []
-    for section in sections:
-        elements.append(section.render_input())
+    for idx, section in enumerate(sections):
+        is_first = idx == 0
+        is_last = idx == len(sections) - 1
+        elements.append(section.render_input(is_first, is_last))
         elements.append(section.render_content())
     return elements
