@@ -191,11 +191,11 @@ def test_dispatcher_sections(client_mock, dispatcher, section_event):
     observed = dispatcher.dispatch(section_event)
     expected = {
         "body": '<div class="justify-center flex"><div class="tabs tab-border '
-        'justify-center gap-2 pb-3 text-sm font-bold w-full"><input '
-        'type="radio" name="tab_group" class="tab min-w-fit w-1/1" '
-        'aria-label="About"><div class="tab-content"><div '
-        'class="justify-center" hx-get="/ui/sections/none" hx-trigger="revealed" '
-        'hx-swap="innerHTML"></div></div></div></div>',
+        'justify-center text-sm font-bold w-full"><input type="radio" '
+        'name="tab_group" class="tab min-w-fit w-1/1 md:pl-30 lg:pl-50 '
+        'md:pr-30 rg:pr-50" aria-label="About"><div class="tab-content"><div '
+        'class="justify-center" hx-get="/ui/sections/none" '
+        'hx-trigger="revealed" hx-swap="innerHTML"></div></div></div></div>',
         "cookies": [],
         "headers": {"Content-Type": "text/html"},
         "isBase64Encoded": False,
@@ -211,8 +211,9 @@ def test_dispatcher_about_section(client_mock, dispatcher, about_event):
     }
     observed = dispatcher.dispatch(about_event)
     expected = {
-        "body": '<div class="hero bg-base-200 min-h-96 w-2/3 tab-content m-auto"><div '
-        'class="hero-content text-center flex-col w-3/4"><span>About body '
+        "body": '<div class="hero bg-base-200 min-h-96 xl:w-2/3 md:w-3/4 w-full '
+        'tab-content m-auto"><div class="hero-content text-center flex-col '
+        'md:w-3/4 w-15/16"><span>About body '
         "text</span><span>yolo</span></div></div>",
         "cookies": [],
         "headers": {"Content-Type": "text/html"},

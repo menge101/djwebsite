@@ -53,7 +53,7 @@ class Section:
         )
         return lens.focus(response, ["Item", "text", "S"])
 
-    def render_input(self, is_first: bool, is_last: bool) -> Input:
+    def render_input(self, is_first: bool = False, is_last: bool = False) -> Input:
         class_string = f"tab min-w-fit {self.width_class}"
         if is_first:
             class_string += " md:pl-30 lg:pl-50"

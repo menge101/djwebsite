@@ -12,6 +12,13 @@ def test_section_render_input(section):
     assert section.render_content().string()
 
 
+def test_section_render_input_with_flags(section):
+    no_flags = section.render_input().string()
+    flags = section.render_input(True, True).string()
+    removed = flags.replace(" md:pl-30 lg:pl-50 md:pr-30 rg:pr-50", "")
+    assert removed == no_flags
+
+
 def test_act(connection_thread_mock, session_data):
     assert sections.act(connection_thread_mock, session_data, {}) == (session_data, [])
 
