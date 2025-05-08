@@ -111,16 +111,19 @@ def get_session_data(session_id: str, table_connection_thread: threading.Returni
 
 @xray_recorder.capture("## Decoding session ID from cookie")
 def get_session_id_from_cookies(event: dict) -> str:
-    raw_cookies = event.get("cookies", [])
+    raw_cookies = event["headers"]["Cookie"]
     cookies = {}
-    for raw in raw_cookies:
+    for raw in raw_cookies.split("; "):
         key, value = raw.split("=", 1)
         cookies[key] = value
+    session_id = cookies["id_"]
+    logger.debug(f"!!FOUND SESSION ID IN COOKIE: {session_id}!!")
     return cookies["id_"]
 
 
 @xray_recorder.capture("## Handling session data")
 def handle_session(event: dict, table_connection_thread: threading.ReturningThread) -> SessionData:
+    logger.debug(f"Handling session data: {event}")
     try:
         session_id = get_session_id_from_cookies(event)
     except KeyError:

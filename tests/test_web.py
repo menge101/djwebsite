@@ -32,10 +32,8 @@ def test_web_error(context, event, mocker, table_name):
     mocker.patch("lib.web.dispatch.Dispatcher.dispatch", side_effect=ValueError)
     expected = {
         "body": "<div>\nError: \n</div>",
-        "headers": {"Content-Type": "text/html"},
-        "isBase64Encoded": False,
+        "multiValueHeaders": {"Content-Type": ["text/html"]},
         "statusCode": 400,
-        "cookies": [],
     }
     observed = web.handler(event, context)
     assert observed == expected
@@ -45,9 +43,7 @@ def test_web_exception(context, event, mocker, table_name):
     mocker.patch("lib.web.dispatch.Dispatcher.dispatch", side_effect=Exception)
     expected = {
         "body": "<div>\nError: \n</div>",
-        "cookies": [],
-        "headers": {"Content-Type": "text/html"},
-        "isBase64Encoded": False,
+        "multiValueHeaders": {"Content-Type": ["text/html"]},
         "statusCode": 500,
     }
     observed = web.handler(event, context)
@@ -62,9 +58,7 @@ def test_web_no_table(context, event, mocker):
     observed = web.handler(event, context)
     expected = {
         "body": "<div>\nError: ddb_table_name env variable is not properly set\n</div>",
-        "cookies": [],
-        "headers": {"Content-Type": "text/html"},
-        "isBase64Encoded": False,
+        "multiValueHeaders": {"Content-Type": ["text/html"]},
         "statusCode": 500,
     }
     assert observed == expected
@@ -95,3 +89,8 @@ def test_global_table_connection_holder(connection_thread_mock, context, event, 
     mocker.patch("lib.web.table_connection_thread_global_holder", connection_thread_mock)
     mocker.patch("lib.web.dispatch.Dispatcher.dispatch", return_value=True)
     assert web.handler(event, context)
+
+
+def test_contact(context, event, mocker, table_name):
+    mocker.patch("lib.web.dispatch.Dispatcher.dispatch", return_value=True)
+    assert web.contact(event, context)

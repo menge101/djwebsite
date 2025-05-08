@@ -7,7 +7,7 @@ from aws_cdk import (
     Stage,
 )
 from constructs import Construct
-from infrastructure import hosted_zone, web
+from infrastructure import cdn_apig_ex, hosted_zone, web
 from typing import Optional
 
 DEV_ENV = Environment(account="779846793683", region="us-east-1")
@@ -97,8 +97,12 @@ class Website(Stack):
         self.web = web.Web(
             self,
             "web-application-construct",
-            handler_path="lib.web.handler",
-            code_package_path="./build/web.zip",
+            handler_paths={"proxy": "lib.web.handler", "log": "lib.log.handler", "contact": "lib.web.contact"},
+            code_package_paths={
+                "proxy": "./build/web.zip",
+                "log": "./build/logging.zip",
+                "contact": "./build/contact.zip",
+            },
             default_root_object="test.html",
             removal_policy=removal_policy,
             logging_level=logging_level,
@@ -107,4 +111,16 @@ class Website(Stack):
             origin_policy=origin_request_policy,
             domain_name=domain_name,
             function_environment_variables=function_environment_variables,
+        )
+
+
+class Testing(Stack):
+    def __init__(self, scope: Construct, id_: str, **kwargs):
+        super().__init__(scope, id_, **kwargs)
+        cdn_apig_ex.CdnAPIGLam(
+            self,
+            "stuff",
+            handler_path="lib.log.handler",
+            code_package_path="./build/logging.zip",
+            logging_level="DEBUG",
         )

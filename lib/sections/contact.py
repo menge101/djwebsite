@@ -22,7 +22,7 @@ def act(
 def apply_template() -> str:
     template = Div(
         Class("tab-content not-prose justify-center flex flex-col md:w-3/4 w-full m-auto"),
-        htmx.Get("/ui/contact"),
+        htmx.Get("/api/contact"),
         htmx.Trigger("load"),
         htmx.Swap("innerHTML"),
     )

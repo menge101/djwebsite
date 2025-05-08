@@ -12,9 +12,7 @@ def test_build_no_env():
     observed = banner.build()
     expected = {
         "body": '<div class="banner invisible">Environment name not set</div>',
-        "cookies": [],
-        "headers": {"Content-Type": "text/html"},
-        "isBase64Encoded": False,
+        "multiValueHeaders": {"Content-Type": ["text/html"]},
         "statusCode": 200,
     }
     assert observed == expected
@@ -25,9 +23,7 @@ def test_build_with_env(mocker):
     observed = banner.build()
     expected = {
         "body": '<div class="banner">This is the test environment</div>',
-        "cookies": [],
-        "headers": {"Content-Type": "text/html"},
-        "isBase64Encoded": False,
+        "multiValueHeaders": {"Content-Type": ["text/html"]},
         "statusCode": 200,
     }
     assert observed == expected

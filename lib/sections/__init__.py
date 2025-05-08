@@ -75,7 +75,7 @@ class Section:
             Class(klass),
             Div(
                 Class("justify-center"),
-                htmx.Get(f"/ui/sections/{self.name}"),
+                htmx.Get(f"/api/sections/{self.name}"),
                 htmx.Trigger("revealed"),
                 htmx.Swap("innerHTML"),
             ),

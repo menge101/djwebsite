@@ -22,7 +22,8 @@ def act(
     logger.debug(f"params: {params}")
     # This guards against the edge case where an action is requested prior to the session being initialized
     if "id_" not in session_data or "sk" not in session_data:
-        raise ValueError("Improperly formatted session data, likely stemming from session corruption")
+        logger.info("Improperly formatted session data, likely stemming from session corruption")
+        raise ValueError
     if not params:
         return session_data, []
     # logo element supports two actions
@@ -47,7 +48,7 @@ def apply_template(rotating: bool) -> str:
     state = "stop" if rotating else "start"
     logger.debug(f"Rotating is {rotating} so we want ot offer the next state of {state}")
     template = Div(
-        htmx.Get(f"/ui/logo?action={state}"),
+        htmx.Get(f"/api/logo?action={state}"),
         htmx.Swap("outerHTML"),
         htmx.Trigger("click"),
         Class("logo"),

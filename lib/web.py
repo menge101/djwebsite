@@ -1,5 +1,4 @@
-from aws_xray_sdk.core import xray_recorder
-from aws_xray_sdk.core import patch_all
+from aws_xray_sdk.core import patch_all, xray_recorder
 from botocore.config import Config
 from mypy_boto3_dynamodb.client import DynamoDBClient
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource
@@ -15,6 +14,7 @@ from lib import (
     threading,
     types,
 )
+from lib.threading import ReturningThread
 
 patch_all()
 
@@ -41,6 +41,17 @@ def ddb_connect(table_name: str | None) -> types.ConnectionThreadResultType:
     return cast(types.ConnectionThreadResultType, (table_name, client, rsrc.Table(table_name)))
 
 
+@xray_recorder.capture("## Bring connection thread into handler")
+def get_connection_thread() -> ReturningThread:
+    global table_connection_thread_global_holder
+    if table_connection_thread_global_holder:
+        table_connection_thread: threading.ReturningThread = table_connection_thread_global_holder
+    else:
+        table_connection_thread = get_table_connection()
+        table_connection_thread_global_holder = table_connection_thread
+    return table_connection_thread
+
+
 @xray_recorder.capture("## Spawn table connection thread")
 def get_table_connection() -> threading.ReturningThread:
     table_name = os.environ.get("ddb_table_name")
@@ -52,16 +63,26 @@ def get_table_connection() -> threading.ReturningThread:
 table_connection_thread_global_holder: threading.ReturningThread | None = None
 
 
+@xray_recorder.capture("## Contact handler")
+def contact(event: dict, context):
+    logger.debug(event)
+    logger.debug(str(context))
+    table_connection_thread = get_connection_thread()
+    dispatcher = dispatch.Dispatcher(
+        connection_thread=table_connection_thread,
+        elements={
+            "/contact": "lib.contact",
+        },
+        prefix="/api",
+    )
+    return handle_dispatch(dispatcher, event, table_connection_thread)
+
+
 @xray_recorder.capture("## Main handler")
 def handler(event: dict, context):
     logger.debug(event)
     logger.debug(str(context))
-    global table_connection_thread_global_holder
-    if table_connection_thread_global_holder:
-        table_connection_thread: threading.ReturningThread = table_connection_thread_global_holder
-    else:
-        table_connection_thread = get_table_connection()
-        table_connection_thread_global_holder = table_connection_thread
+    table_connection_thread = get_connection_thread()
     dispatcher = dispatch.Dispatcher(
         connection_thread=table_connection_thread,
         elements={
@@ -70,14 +91,17 @@ def handler(event: dict, context):
             "/images": "lib.image_carousel",
             "/logo": "lib.logo",
             "/mixes": "lib.mixes",
-            "/contact": "lib.contact",
             "/sections": "lib.sections",
             "/sections/about": "lib.sections.about",
             "/sections/mixes": "lib.sections.mixes",
             "/sections/contact": "lib.sections.contact",
         },
-        prefix="/ui",
+        prefix="/api",
     )
+    return handle_dispatch(dispatcher, event, table_connection_thread)
+
+
+def handle_dispatch(dispatcher, event, table_connection_thread):
     try:
         return dispatcher.dispatch(event)
     except ValueError as ve:
