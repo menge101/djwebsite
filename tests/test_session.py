@@ -10,7 +10,7 @@ def base_time():
 
 @fixture
 def event_with_cookie(session_id):
-    return {"cookies": [f"id_={session_id}"]}
+    return {"headers": {"Cookie": f"id_={session_id}"}}
 
 
 @fixture
@@ -46,9 +46,10 @@ def test_build_with_session(base_time, connection_thread_mock, mocker, session_i
     observed = session.build(connection_thread_mock, session_data)
     expected = {
         "body": "",
-        "cookies": [f"id_={session_id}; Expires=Mon, 01 Jan 2024 00:00:00 GMT; HttpOnly; Secure; SameSite=Strict"],
-        "headers": {"Content-Type": "text/html"},
-        "isBase64Encoded": False,
+        "multiValueHeaders": {
+            "Content-Type": ["text/html"],
+            "Set-Cookie": ["id_=1234567890; Expires=Mon, 01 Jan 2024 00:00:00 GMT; HttpOnly; Secure; SameSite=Strict"],
+        },
         "statusCode": 200,
     }
     assert observed == expected

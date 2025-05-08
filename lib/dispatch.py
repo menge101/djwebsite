@@ -38,16 +38,16 @@ class Dispatchable(Protocol):
 class DispatchInfo:
     def __init__(self, event: dict, expected_path_prefix: Optional[str] = None):
         self.event = event
-        self.method: str = lens.focus(event, ["requestContext", "http", "method"], default_result=False)
+        self.method: str = lens.focus(event, ["requestContext", "httpMethod"], default_result=False)
         try:
             self.path: str = self.remove_prefix(
                 expected_path_prefix,
-                lens.focus(event, ["requestContext", "http", "path"]),
+                lens.focus(event, ["path"]),
             )
         except lens.FocusingError:
             self.path = None  # type: ignore
         self.request_id: str = lens.focus(event, ["requestContext", "requestId"], default_result=False)
-        self.query_params = lens.focus(event, ["queryStringParameters"], default_result=dict())
+        self.query_params = lens.focus(event, ["queryStringParameters"], default_result=dict()) or {}
         try:
             self.session_id: Optional[str] = session.get_session_id_from_cookies(event)
         except KeyError:
@@ -61,9 +61,7 @@ class DispatchInfo:
         return path
 
     def validate(self) -> None:
-        errors = []
-        if self.event.get("version") != "2.0":
-            errors.append(f"Invalid version: {self.event.get('version')}, should be 2.0")
+        errors: list[str] = []
         if self.method is False:
             errors.append("Method field not found")
         if self.path is None:
@@ -97,8 +95,13 @@ class Dispatcher:
             return response
         existing_triggered_events: str = lens.focus(response, ["headers", "HX-Trigger"], default_result="")
         triggered_events.extend(map(lambda x: x.strip(), existing_triggered_events.split(",")))
-        headers: dict = cast(dict, response["headers"])
-        headers["HX-Trigger"] = ", ".join(triggered_events)
+        try:
+            headers: dict = cast(dict, response["multiValueHeaders"])
+        except KeyError:
+            headers = {}
+            if triggered_events:
+                response["multiValueHeaders"] = headers
+        headers["HX-Trigger"] = [", ".join(triggered_events)]
         return response
 
     @xray_recorder.capture("## Initializing dispatch")

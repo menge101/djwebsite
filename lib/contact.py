@@ -54,7 +54,7 @@ def apply_form_template(localized_strings: dict[str, str], session_data: session
             put 'Submit' into me
                         """
     template = elements.Form(
-        htmx.Get("/ui/contact"),
+        htmx.Get("/api/contact"),
         htmx.Trigger("submit"),
         htmx.Swap("outerHTML"),
         attributes.ID("booking"),
@@ -300,7 +300,7 @@ def apply_refresh_template(localized_strings: dict[str, str]) -> str:
             "w-full row-span-2 justify-center flex m-auto space-y-3 h-64 cursor-pointer bg-base-200 border border-base-300"
         ),
         htmx.Trigger("click"),
-        htmx.Get("/ui/contact?form=clear"),
+        htmx.Get("/api/contact?form=clear"),
         htmx.Swap("outerHTML"),
         attributes.ID("form-base"),
         elements.Button(

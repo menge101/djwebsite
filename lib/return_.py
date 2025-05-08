@@ -3,11 +3,9 @@ from typing import cast, NewType, Optional
 import logging
 import os
 
-
 logging_level = os.environ.get("logging_level", "DEBUG").upper()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging_level)
-
 
 Returnable = NewType("Returnable", dict[str, bool | dict | int | str])
 
@@ -23,20 +21,20 @@ def error(exception: Exception, status_code: int, headers: Optional[dict[str, st
 def http(
     body: str,
     status_code: int,
-    headers: Optional[dict[str, str]] = None,
+    headers: Optional[dict[str, list[str]]] = None,
     cookies: Optional[list[str]] = None,
 ) -> Returnable:
     headers = headers or {}
     cookies = cookies or []
-    headers["Content-Type"] = "text/html"
+    headers["Content-Type"] = ["text/html"]
+    if cookies:
+        headers["Set-Cookie"] = cookies
     response = cast(
         Returnable,
         {
-            "headers": headers,
-            "isBase64Encoded": False,
             "statusCode": status_code,
             "body": body,
-            "cookies": cookies,
+            "multiValueHeaders": headers,
         },
     )
     logger.debug(f"Response: {response}")

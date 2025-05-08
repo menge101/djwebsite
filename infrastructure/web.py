@@ -1,5 +1,6 @@
 from aws_cdk import (
     aws_certificatemanager as acm,
+    aws_apigateway as api,
     aws_cloudfront as cloudfront,
     aws_cloudfront_origins as cf_origins,
     aws_dynamodb as ddb,
@@ -14,6 +15,7 @@ from aws_cdk import (
 )
 from constructs import Construct
 from typing import cast, Optional
+import secrets
 
 
 class Web(Construct):
@@ -22,8 +24,8 @@ class Web(Construct):
         scope: Construct,
         id_: str,
         *,
-        handler_path: str,
-        code_package_path: str,
+        handler_paths: dict[str, str],
+        code_package_paths: dict[str, str],
         default_root_object: str,
         removal_policy: Optional[RemovalPolicy] = RemovalPolicy.RETAIN,
         logging_level: Optional[str] = None,
@@ -72,18 +74,35 @@ class Web(Construct):
         self.table.grant_read_write_data(lambda_role)
         function_environment_variables["logging_level"] = logging_level
         function_environment_variables["ddb_table_name"] = self.table.table_name
-        function = lam.Function(
+        proxy_fn = lam.Function(
             self,
-            "primary_fn",
-            code=lam.Code.from_asset(code_package_path),
-            handler=handler_path,
+            "proxy_fn",
+            code=lam.Code.from_asset(code_package_paths["proxy"]),
+            handler=handler_paths["proxy"],
             runtime=cast(lam.Runtime, lam.Runtime.PYTHON_3_13),
             role=lambda_role,
             tracing=lam.Tracing.ACTIVE if tracing else lam.Tracing.DISABLED,
             environment=function_environment_variables,
             memory_size=512,
+            reserved_concurrent_executions=3,
         )
-        fn_url = function.add_function_url(auth_type=lam.FunctionUrlAuthType.AWS_IAM)
+        fn_url = proxy_fn.add_function_url(auth_type=lam.FunctionUrlAuthType.AWS_IAM)
+        proxy_integration = api.LambdaIntegration(cast(lam.IFunction, proxy_fn))
+        contact_fn = lam.Function(
+            self,
+            "contact_fn",
+            code=lam.Code.from_asset(code_package_paths["contact"]),
+            handler=handler_paths["contact"],
+            runtime=cast(lam.Runtime, lam.Runtime.PYTHON_3_13),
+            role=lambda_role,
+            tracing=lam.Tracing.ACTIVE if tracing else lam.Tracing.DISABLED,
+            environment=function_environment_variables,
+            memory_size=512,
+            reserved_concurrent_executions=3,
+        )
+        contact_integration = api.LambdaIntegration(cast(lam.IFunction, contact_fn))
+        api_origin = self.define_api_gateway(proxy_integration, contact_integration)
+
         lambda_origin_access_control = cloudfront.FunctionUrlOriginAccessControl(
             self,
             "lambda-origin-access-control",
@@ -127,12 +146,26 @@ class Web(Construct):
                     origin_request_policy=origin_policy,
                     viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
                 ),
+                "/api*": cloudfront.BehaviorOptions(
+                    allowed_methods=cloudfront.AllowedMethods.ALLOW_ALL,
+                    origin=cast(cloudfront.IOrigin, api_origin),
+                    cache_policy=cache_policy,
+                    origin_request_policy=origin_policy,
+                    viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+                ),
             },
             domain_names=domain_names,
             certificate=certificate,
         )
-        function.add_permission(
+        proxy_fn.add_permission(
             "cloudfront_permission",
+            principal=iam.ServicePrincipal("cloudfront.amazonaws.com"),
+            action="lambda:InvokeFunctionUrl",
+            function_url_auth_type=lam.FunctionUrlAuthType.AWS_IAM,
+            source_arn=f"arn:aws:cloudfront::{Aws.ACCOUNT_ID}:distribution/{self.distribution.distribution_id}",
+        )
+        contact_fn.add_permission(
+            "cloudfront_permission_for_contact",
             principal=iam.ServicePrincipal("cloudfront.amazonaws.com"),
             action="lambda:InvokeFunctionUrl",
             function_url_auth_type=lam.FunctionUrlAuthType.AWS_IAM,
@@ -155,3 +188,59 @@ class Web(Construct):
             domain_name=domain_name,
             validation=acm.CertificateValidation.from_dns(hosted_zone),
         )
+
+    def define_api_gateway(self, proxy_int, contact_int) -> cf_origins.RestApiOrigin:
+        gateway = api.RestApi(
+            self,
+            "api",
+            deploy=True,
+            endpoint_types=[api.EndpointType.REGIONAL],
+            deploy_options=api.StageOptions(
+                caching_enabled=False,
+                logging_level=api.MethodLoggingLevel.INFO,
+                data_trace_enabled=True,
+                tracing_enabled=True,
+                stage_name="api",
+            ),
+        )
+        gateway.root.add_proxy(default_integration=proxy_int)
+        usage_plan = gateway.add_usage_plan(
+            "api-uage-plan",
+            throttle=api.ThrottleSettings(burst_limit=25, rate_limit=5),
+            quota=api.QuotaSettings(limit=500, period=api.Period.DAY),
+        )
+        api_rsrc = gateway.root.add_resource("api", default_integration=proxy_int)
+        proxy = api_rsrc.add_proxy(default_integration=proxy_int)
+        contact_rsrc = api_rsrc.add_resource("contact")
+        contact_get = contact_rsrc.add_method("GET", contact_int)
+        usage_plan.add_api_stage(
+            api=gateway,
+            stage=gateway.deployment_stage,
+            throttle=[
+                api.ThrottlingPerMethod(
+                    method=contact_get,
+                    throttle=api.ThrottleSettings(
+                        burst_limit=2,
+                        rate_limit=1,
+                    ),
+                ),
+                api.ThrottlingPerMethod(
+                    method=cast(api.Method, proxy.any_method),
+                    throttle=api.ThrottleSettings(
+                        burst_limit=25,
+                        rate_limit=5,
+                    ),
+                ),
+            ],
+        )
+
+        secret_header_name = "X-Origin-Auth"
+        secret_header_value = "my-shared-secret"
+        api_key_key = "X-API-KEY"
+        api_key_value = f"{secrets.randbits(128):032x}"
+        usage_plan.add_api_key(api.ApiKey(self, "api-key", value=api_key_value))
+        api_origin = cf_origins.RestApiOrigin(
+            gateway,
+            custom_headers={secret_header_name: secret_header_value, api_key_key: api_key_value},
+        )
+        return api_origin
