@@ -23,7 +23,18 @@ def act(
     if all(
         [
             key in params.keys()
-            for key in ["date", "phone", "karaoke?", "name", "description", "location", "time", "email", "csrf"]
+            for key in [
+                "date",
+                "phone",
+                "karaoke?",
+                "name",
+                "description",
+                "location",
+                "time",
+                "email",
+                "duration",
+                "csrf",
+            ]
         ]
     ):
         logger.debug("all keys for form submission are filled")
@@ -200,6 +211,7 @@ def apply_form_template(localized_strings: dict[str, str], session_data: session
                                     attributes.Class("fieldset-label block"),
                                     elements.Input(
                                         attributes.Type("range"),
+                                        attributes.Name("duration"),
                                         attributes.Min("0"),
                                         attributes.Max("8"),
                                         attributes.Value("1"),
