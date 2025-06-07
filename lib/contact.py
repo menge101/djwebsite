@@ -1,7 +1,12 @@
 from aws_xray_sdk.core import xray_recorder
 from basilico import attributes, elements, htmx
+from datetime import datetime
 from lib import return_, security, session, threading, types
+from lib.threading import ReturningThread
+from mypy_boto3_sns.client import SNSClient
 from typing import cast
+from urllib.parse import unquote
+import boto3
 import lens
 import logging
 import os
@@ -11,6 +16,8 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging_level)
 
 STRING_PREFIX = "contact#form#"
+
+sns_client_global_holder: ReturningThread | None = None
 
 
 @xray_recorder.capture("## Contact act function")
@@ -41,7 +48,16 @@ def act(
         params = security.clean_data(params)
         try:
             if params["csrf"] == lens.focus(session_data, ["contact", "csrf"]):
+                sns_connection_thread = get_sns_connection_thread()
                 lens.carve(session_data, ["contact", "form"], "submitted")
+                notification_message = format_notification(params)
+                topic_arn = os.environ["notification_topic_arn"]
+                sns_client: SNSClient = sns_connection_thread.join()
+                sns_client.publish(
+                    TopicArn=topic_arn,
+                    Subject="Contact query received",
+                    Message=notification_message,
+                )
         except lens.FocusingError:
             logger.warning(f"Attempt to check CSRF without CSRF present in session: {session_data}")
     if params.get("form") == "clear":
@@ -255,9 +271,6 @@ def apply_form_template(localized_strings: dict[str, str], session_data: session
                             elements.Textarea(
                                 attributes.Class("textarea h-24 w-full min-w-75 validator"),
                                 attributes.Name("description"),
-                                attributes.Required(),
-                                # Validation checks for seven or more characters
-                                attributes.MinLength("7"),
                             ),
                         ),
                         elements.FieldSet(
@@ -345,15 +358,34 @@ def apply_refresh_template(localized_strings: dict[str, str]) -> str:
 
 @xray_recorder.capture("## Building contact body")
 def build(
-    connection_thread: threading.ReturningThread, session_data: dict[str, str], *_args, **_kwargs
+    connection_thread: threading.ReturningThread, session_data: session.SessionData, *_args, **_kwargs
 ) -> return_.Returnable:
     logger.debug("Starting contact build")
     logger.debug(session_data)
-    localization: str = session_data.get("local", "en")
+    localization: str = cast(str, session_data.get("local", "en"))
     localized_strings: dict[str, str] = get_localized_strings(connection_thread, localization, STRING_PREFIX)
     if lens.focus(session_data, ["contact", "form"], default_result="clear") == "submitted":
         return return_.http(body=apply_refresh_template(localized_strings), status_code=200)
     return return_.http(body=apply_form_template(localized_strings, session_data), status_code=200)
+
+
+@xray_recorder.capture("## Formatting notification message")
+def format_notification(params: dict[str, str]) -> str:
+    params.pop("csrf")
+    params["name"] = params["name"].replace("%20", " ")
+    params["email"] = params["email"].replace("%40", "@")
+    params["location"] = params["location"].replace("%20", " ")
+    params["description"] = params["description"].replace("%20", " ")
+    params["date"] = datetime.strptime(params["date"], "%Y-%m-%d").strftime("%a %b %d %Y")
+    params["karaoke?"] = "yes" if params["karaoke?"] == "on" else "no"
+    params["time"] = datetime.strptime(unquote(params["time"]), "%H:%M").strftime("%I:%M %p")
+    return (
+        f"{params['name']} - {params['phone']} - {params['email']}\n"
+        f"{params['date']} - {params['time']} for {params['duration']} hours\n"
+        f"Location: {params['location']}\n"
+        f"Description: {params['description']}\n"
+        f"Karaoke?: {params['karaoke?']}\n"
+    )
 
 
 @xray_recorder.capture("## Getting localized strings for contact")
@@ -381,3 +413,26 @@ def package_data(response: dict[str, str], prefix: str) -> dict[str, str]:
         text = lens.focus(item, ["text", "S"])
         data[key] = text
     return data
+
+
+@xray_recorder.capture("## Create SNS client")
+def create_sns_client() -> SNSClient:
+    return boto3.client("sns")
+
+
+@xray_recorder.capture("## Bring SNS client into process")
+def get_sns_connection_thread() -> ReturningThread:
+    global sns_client_global_holder
+    if sns_client_global_holder:
+        sns_client_thread: ReturningThread = sns_client_global_holder
+    else:
+        sns_client_thread = get_sns_connection()
+        sns_client_global_holder = sns_client_thread
+    return sns_client_thread
+
+
+@xray_recorder.capture("## Spawn SNS connection thread")
+def get_sns_connection() -> ReturningThread:
+    sns_client_thread = threading.ReturningThread(target=create_sns_client, daemon=True)
+    sns_client_thread.start_safe()
+    return sns_client_thread

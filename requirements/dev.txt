@@ -1,6 +1,6 @@
 -r ./web.txt
 aws-cdk-lib
-boto3-stubs[dynamodb]
+boto3-stubs[dynamodb, sns]
 constructs
 invoke
 mypy

@@ -192,6 +192,10 @@ mypy-boto3-dynamodb==1.37.12 \
     --hash=sha256:0e4d7a16fb9dba7aab7ac9ba8ff3721f9696a8484b1eed693b7949164b7805ba \
     --hash=sha256:a4b2770ec1f8d6096b5e6d863800f3ff742c86a17dfa5e6b012ed7f7ccd28921
     # via boto3-stubs
+mypy-boto3-sns==1.37.0 \
+    --hash=sha256:5bb9cc6a5cf8e98b67d6652d6c0c38eea98169ecadb6a47da635837020d864a0 \
+    --hash=sha256:d55aed532578e375dd98e299a315270406fe7b34ace77251bd074777d68a4788
+    # via boto3-stubs
 mypy-extensions==1.0.0 \
     --hash=sha256:4392f6c0eb8a5668a69e23d168ffa70f0be9ccfd32b5cc2d26a34ae5b844552d \
     --hash=sha256:75dbf8955dc00442a438fc4d0666508a9a97b6bd41aa2f0ffe9d2f2725af0782
