@@ -7,6 +7,9 @@ from aws_cdk import (
     aws_iam as iam,
     aws_lambda as lam,
     aws_route53 as r53,
+    aws_sns as sns,
+    aws_sns_subscriptions as sns_subs,
+    aws_sqs as sqs,
     aws_s3 as s3,
     aws_s3_deployment as s3_deploy,
     Aws,
@@ -34,11 +37,14 @@ class Web(Construct):
         origin_policy: Optional[cloudfront.OriginRequestPolicy] = cloudfront.OriginRequestPolicy.ALL_VIEWER,
         function_environment_variables: Optional[dict[str, str]] = None,
         domain_name: str | None = None,
+        notification_email: str,
+        api_quota: int,
+        throttles: dict[str, dict[str, int]],
     ) -> None:
         logging_level = logging_level.upper() if logging_level else "DEBUG"
         super().__init__(scope, id_)
         function_environment_variables = function_environment_variables or {}
-        lambda_policy = iam.ManagedPolicy(
+        lambda_Base_policy = iam.ManagedPolicy(
             self,
             "lambda_policy",
             statements=[
@@ -49,11 +55,17 @@ class Web(Construct):
                 )
             ],
         )
-        lambda_role = iam.Role(
+        proxy_role = iam.Role(
             self,
             "lambda_role",
             assumed_by=iam.ServicePrincipal("lambda.amazonaws.com"),
-            managed_policies=[lambda_policy],
+            managed_policies=[lambda_Base_policy],
+        )
+        contact_role = iam.Role(
+            self,
+            "contact_role",
+            assumed_by=iam.ServicePrincipal("lambda.amazonaws.com"),
+            managed_policies=[lambda_Base_policy],
         )
         bucket = s3.Bucket(
             self,
@@ -71,7 +83,10 @@ class Web(Construct):
             sort_key=ddb.Attribute(name="sk", type=ddb.AttributeType.STRING),
             time_to_live_attribute="ttl",
         )
-        self.table.grant_read_write_data(lambda_role)
+        self.table.grant_read_write_data(proxy_role)
+        self.table.grant_read_write_data(contact_role)
+        self.notification_topic = self.build_topic(contact_role, notification_email)
+        self.notification_topic.grant_publish(contact_role)
         function_environment_variables["logging_level"] = logging_level
         function_environment_variables["ddb_table_name"] = self.table.table_name
         proxy_fn = lam.Function(
@@ -80,28 +95,34 @@ class Web(Construct):
             code=lam.Code.from_asset(code_package_paths["proxy"]),
             handler=handler_paths["proxy"],
             runtime=cast(lam.Runtime, lam.Runtime.PYTHON_3_13),
-            role=lambda_role,
+            role=proxy_role,
             tracing=lam.Tracing.ACTIVE if tracing else lam.Tracing.DISABLED,
             environment=function_environment_variables,
             memory_size=512,
             reserved_concurrent_executions=3,
         )
-        fn_url = proxy_fn.add_function_url(auth_type=lam.FunctionUrlAuthType.AWS_IAM)
         proxy_integration = api.LambdaIntegration(cast(lam.IFunction, proxy_fn))
+        function_environment_variables["notification_topic_arn"] = self.notification_topic.topic_arn
         contact_fn = lam.Function(
             self,
             "contact_fn",
             code=lam.Code.from_asset(code_package_paths["contact"]),
             handler=handler_paths["contact"],
             runtime=cast(lam.Runtime, lam.Runtime.PYTHON_3_13),
-            role=lambda_role,
+            role=contact_role,
             tracing=lam.Tracing.ACTIVE if tracing else lam.Tracing.DISABLED,
             environment=function_environment_variables,
             memory_size=512,
             reserved_concurrent_executions=3,
         )
         contact_integration = api.LambdaIntegration(cast(lam.IFunction, contact_fn))
-        api_origin = self.define_api_gateway(proxy_integration, contact_integration)
+        api_origin = self.define_api_gateway(
+            proxy_integration,
+            contact_integration,
+            api_quota=api_quota,
+            proxy_throttle=throttles["proxy"],
+            contact_throttle=throttles["contact"],
+        )
 
         s3_origin_access_control = cloudfront.S3OriginAccessControl(
             self,
@@ -129,7 +150,7 @@ class Web(Construct):
             ),
             additional_behaviors={
                 "/api*": cloudfront.BehaviorOptions(
-                    allowed_methods=cloudfront.AllowedMethods.ALLOW_ALL,
+                    allowed_methods=cast(cloudfront.AllowedMethods, cloudfront.AllowedMethods.ALLOW_ALL),
                     origin=cast(cloudfront.IOrigin, api_origin),
                     cache_policy=cache_policy,
                     origin_request_policy=origin_policy,
@@ -162,6 +183,18 @@ class Web(Construct):
         )
         CfnOutput(self, "cf_domain", value=self.distribution.domain_name)
 
+    def build_topic(self, contact_role: iam.Role, notification_email: str) -> sns.Topic:
+        topic = sns.Topic(
+            self,
+            "notification-topic",
+        )
+        topic.grant_publish(contact_role)
+        email_sub = sns_subs.EmailSubscription(
+            email_address=notification_email, dead_letter_queue=cast(sqs.IQueue, sqs.Queue(self, "notification-dlq"))
+        )
+        topic.add_subscription(email_sub)
+        return topic
+
     def create_certificate(self, domain_name: str) -> acm.Certificate:
         hosted_zone = r53.HostedZone.from_lookup(self, "hosted-zone", domain_name=domain_name)
         return acm.Certificate(
@@ -171,7 +204,14 @@ class Web(Construct):
             validation=acm.CertificateValidation.from_dns(hosted_zone),
         )
 
-    def define_api_gateway(self, proxy_int, contact_int) -> cf_origins.RestApiOrigin:
+    def define_api_gateway(
+        self,
+        proxy_int: api.LambdaIntegration,
+        contact_int: api.LambdaIntegration,
+        api_quota: int,
+        proxy_throttle: dict[str, int],
+        contact_throttle: dict[str, int],
+    ) -> cf_origins.RestApiOrigin:
         gateway = api.RestApi(
             self,
             "api",
@@ -188,8 +228,8 @@ class Web(Construct):
         gateway.root.add_proxy(default_integration=proxy_int)
         usage_plan = gateway.add_usage_plan(
             "api-uage-plan",
-            throttle=api.ThrottleSettings(burst_limit=25, rate_limit=5),
-            quota=api.QuotaSettings(limit=500, period=api.Period.DAY),
+            throttle=api.ThrottleSettings(burst_limit=proxy_throttle["burst"], rate_limit=proxy_throttle["rate"]),
+            quota=api.QuotaSettings(limit=api_quota, period=api.Period.DAY),
         )
         api_rsrc = gateway.root.add_resource("api", default_integration=proxy_int)
         proxy = api_rsrc.add_proxy(default_integration=proxy_int)
@@ -202,15 +242,15 @@ class Web(Construct):
                 api.ThrottlingPerMethod(
                     method=contact_get,
                     throttle=api.ThrottleSettings(
-                        burst_limit=2,
-                        rate_limit=1,
+                        burst_limit=proxy_throttle["burst"],
+                        rate_limit=proxy_throttle["rate"],
                     ),
                 ),
                 api.ThrottlingPerMethod(
                     method=cast(api.Method, proxy.any_method),
                     throttle=api.ThrottleSettings(
-                        burst_limit=25,
-                        rate_limit=5,
+                        burst_limit=contact_throttle["burst"],
+                        rate_limit=contact_throttle["rate"],
                     ),
                 ),
             ],

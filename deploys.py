@@ -29,6 +29,9 @@ class Production(Stage):
             header_behavior=cf.OriginRequestHeaderBehavior.none(),
             query_string_behavior=cf.OriginRequestQueryStringBehavior.allow_list("action"),
         )
+        throttles = {"proxy": {"burst": 25, "rate": 7}, "contact": {"burst": 2, "rate": 1}}
+        notification_email = "nathan.menge+dev@gmail.com"
+        api_quota: int = 5000
         website = Website(
             self,
             "djweb",
@@ -38,6 +41,9 @@ class Production(Stage):
             cache_policy_props=cache_policy_props,
             origin_request_policy_props=origin_request_policy_props,
             domain_name=PRODUCTION_DOMAIN_NAME,
+            throttles=throttles,
+            api_quota=api_quota,
+            notification_email=notification_email,
         )
 
         hosted_zone.HostedZone(
@@ -63,6 +69,9 @@ class Development(Stage):
             header_behavior=(cf.OriginRequestHeaderBehavior.allow_list(*headers)),
             query_string_behavior=(cf.OriginRequestQueryStringBehavior.all()),
         )
+        throttles = {"proxy": {"burst": 25, "rate": 8}, "contact": {"burst": 2, "rate": 2}}
+        notification_email = "nathan.menge+dev@gmail.com"
+        api_quota: int = 5000
         Website(
             self,
             "djweb",
@@ -72,6 +81,9 @@ class Development(Stage):
             cache_policy_props=cache_policy_props,
             origin_request_policy_props=origin_policy_props,
             function_environment_variables={"environment_name": "dev"},
+            throttles=throttles,
+            notification_email=notification_email,
+            api_quota=api_quota,
         )
 
 
@@ -85,6 +97,9 @@ class Website(Stack):
         origin_request_policy_props: cf.OriginRequestPolicyProps,
         logging_level: str,
         tracing: bool,
+        api_quota: int,
+        throttles: dict[str, dict[str, int]],
+        notification_email: str,
         domain_name: str | None = None,
         function_environment_variables: Optional[dict[str, str]] = None,
         **kwargs,
@@ -111,6 +126,9 @@ class Website(Stack):
             origin_policy=origin_request_policy,
             domain_name=domain_name,
             function_environment_variables=function_environment_variables,
+            api_quota=api_quota,
+            throttles=throttles,
+            notification_email=notification_email,
         )
 
 
