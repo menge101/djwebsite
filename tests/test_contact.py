@@ -43,6 +43,7 @@ def test_act_all_params(connection_thread_mock, csrf_token, session_data_with_cs
         "location": "yo",
         "time": "03:03AM",
         "email": "a@b.c",
+        "duration": "4",
         "csrf": csrf_token,
     }
     observed, _ = contact.act(connection_thread_mock, session_data_with_csrf, params)
@@ -59,9 +60,27 @@ def test_act_no_csrf(connection_thread_mock, csrf_token, session_data):
         "location": "yo",
         "time": "03:03AM",
         "email": "a@b.c",
+        "duration": "4",
         "csrf": csrf_token,
     }
     observed, _ = contact.act(connection_thread_mock, session_data, params)
+    assert "form" not in observed["contact"]
+    assert "csrf" in observed["contact"]
+
+
+def test_act_no_duration(connection_thread_mock, csrf_token, session_data_with_csrf):
+    params = {
+        "date": "030303",
+        "phone": "2134567890",
+        "karaoke?": "off",
+        "name": "yolo",
+        "description": "descript",
+        "location": "yo",
+        "time": "03:03AM",
+        "email": "a@b.c",
+        "csrf": csrf_token,
+    }
+    observed, _ = contact.act(connection_thread_mock, session_data_with_csrf, params)
     assert "form" not in observed["contact"]
     assert "csrf" in observed["contact"]
 
