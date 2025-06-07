@@ -103,11 +103,6 @@ class Web(Construct):
         contact_integration = api.LambdaIntegration(cast(lam.IFunction, contact_fn))
         api_origin = self.define_api_gateway(proxy_integration, contact_integration)
 
-        lambda_origin_access_control = cloudfront.FunctionUrlOriginAccessControl(
-            self,
-            "lambda-origin-access-control",
-            signing=cast(cloudfront.Signing, cloudfront.Signing.SIGV4_ALWAYS),
-        )
         s3_origin_access_control = cloudfront.S3OriginAccessControl(
             self,
             "s3-origin-access-control",
@@ -133,19 +128,6 @@ class Web(Construct):
                 viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
             ),
             additional_behaviors={
-                "/ui/*": cloudfront.BehaviorOptions(
-                    allowed_methods=cloudfront.AllowedMethods.ALLOW_ALL,
-                    origin=cast(
-                        cloudfront.IOrigin,
-                        cf_origins.FunctionUrlOrigin.with_origin_access_control(
-                            fn_url,
-                            origin_access_control=lambda_origin_access_control,
-                        ),
-                    ),
-                    cache_policy=cache_policy,
-                    origin_request_policy=origin_policy,
-                    viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-                ),
                 "/api*": cloudfront.BehaviorOptions(
                     allowed_methods=cloudfront.AllowedMethods.ALLOW_ALL,
                     origin=cast(cloudfront.IOrigin, api_origin),
