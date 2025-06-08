@@ -12,7 +12,7 @@ from typing import Optional
 
 DEV_ENV = Environment(account="779846793683", region="us-east-1")
 PRD_ENV = Environment(account="473626866269", region="us-east-1")
-PRODUCTION_DOMAIN_NAME = "not set"
+PRODUCTION_DOMAIN_NAME = "djwzl.com"
 
 
 class Production(Stage):
@@ -29,8 +29,8 @@ class Production(Stage):
             header_behavior=cf.OriginRequestHeaderBehavior.none(),
             query_string_behavior=cf.OriginRequestQueryStringBehavior.allow_list("action"),
         )
-        throttles = {"proxy": {"burst": 25, "rate": 7}, "contact": {"burst": 2, "rate": 1}}
-        notification_email = "nathan.menge+dev@gmail.com"
+        throttles = {"proxy": {"burst": 25, "rate": 8}, "contact": {"burst": 2, "rate": 1}}
+        notification_email = "nathan.menge@gmail.com"
         api_quota: int = 5000
         website = Website(
             self,
@@ -45,7 +45,6 @@ class Production(Stage):
             api_quota=api_quota,
             notification_email=notification_email,
         )
-
         hosted_zone.HostedZone(
             self,
             "prd-hosted-zone",
