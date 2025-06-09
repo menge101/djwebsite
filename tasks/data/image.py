@@ -1,31 +1,21 @@
 from invoke import Collection, Task, task
 from typing import cast
 import boto3
-import csv
 
 
 @task
-def load_ddb_table(_ctx, table_name, source_file_path):
-    rsrc = boto3.resource("dynamodb")
-    tbl = rsrc.Table(table_name)
-    with open(source_file_path) as csvfile:
-        reader = csv.DictReader(csvfile)
-        rows = [row for row in reader]
-    for row in rows:
-        tbl.put_item(Item=row)
-    return True
-
-
-@task
-def remove_image(_c, table_name: str, bucket_name: str, url: str) -> None:
+def remove(_c, table_name: str, bucket_name: str, url: str) -> bool:
     s3_removal_success: bool = _remove_s3(bucket_name, url)
     ddb_removal_success: bool = _remove_ddb(table_name, url)
     if all([s3_removal_success, ddb_removal_success]):
         print(f"Successfully removed image {url} from s3 and ddb")
+        return True
+    else:
+        return False
 
 
 @task
-def upload_image(_c, table_name: str, bucket_name: str, path_to_file: str, url: str, alt_text: str) -> bool:
+def upload(_c, table_name: str, bucket_name: str, path_to_file: str, url: str, alt_text: str) -> bool:
     s3_success: bool = _upload_to_s3(bucket_name, url, path_to_file)
     ddb_success: bool = _update_ddb_table(table_name, url, alt_text)
     if all([s3_success, ddb_success]):
@@ -60,7 +50,6 @@ def _upload_to_s3(bucket_name: str, url: str, path_to_file: str) -> bool:
     return True
 
 
-data = Collection()
-data.add_task(cast(Task, upload_image))
-data.add_task(cast(Task, load_ddb_table))
-data.add_task(cast(Task, remove_image))
+images = Collection("images")
+images.add_task(cast(Task, remove))
+images.add_task(cast(Task, upload))
