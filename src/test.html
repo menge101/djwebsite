@@ -73,6 +73,10 @@
      class="justify-center flex">
     <div class="skeleton h-32 w-96 mb-2 m-auto"></div>
 </div>
+<div hx-get="/api/toaster"
+     hx-trigger="session-created from:body, session-found from:body"
+     hx-swap="outerHTML">
+</div>
 <div class="invisible" hx-get="/api/session" hx-trigger="load"></div>
 </body>
 </html>

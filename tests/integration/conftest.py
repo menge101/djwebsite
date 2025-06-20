@@ -13,6 +13,14 @@ def client_s3():
 
 
 @fixture
+def connection_thread_mock(mocker, client, resource, table_name):
+    thread_mock = mocker.Mock(name="ConnectionThread")
+    table = resource.Table(table_name)
+    thread_mock.join.return_value = table_name, client, table
+    return thread_mock
+
+
+@fixture
 def resource():
     return boto3.resource("dynamodb")
 

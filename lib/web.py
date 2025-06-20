@@ -2,7 +2,7 @@ from aws_xray_sdk.core import patch_all, xray_recorder
 from botocore.config import Config
 from mypy_boto3_dynamodb.client import DynamoDBClient
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource
-from typing import cast
+from typing import cast, Optional
 import boto3
 import logging
 import os
@@ -53,8 +53,8 @@ def get_connection_thread() -> ReturningThread:
 
 
 @xray_recorder.capture("## Spawn table connection thread")
-def get_table_connection() -> threading.ReturningThread:
-    table_name = os.environ.get("ddb_table_name")
+def get_table_connection(table_name: Optional[str] = None) -> threading.ReturningThread:
+    table_name = table_name or os.environ.get("ddb_table_name")
     table_connection_thread = threading.ReturningThread(target=ddb_connect, args=(table_name,), daemon=True)
     table_connection_thread.start_safe()
     return table_connection_thread
@@ -95,6 +95,7 @@ def handler(event: dict, context):
             "/sections/about": "lib.sections.about",
             "/sections/mixes": "lib.sections.mixes",
             "/sections/contact": "lib.sections.contact",
+            "/toaster": "lib.toaster",
         },
         prefix="/api",
     )
