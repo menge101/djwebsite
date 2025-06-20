@@ -1,7 +1,7 @@
 from aws_xray_sdk.core import xray_recorder
 from basilico import attributes, elements, htmx
 from datetime import datetime
-from lib import return_, security, session, threading, types
+from lib import return_, security, session, threading, toast, types
 from lib.threading import ReturningThread
 from mypy_boto3_sns.client import SNSClient
 from typing import cast
@@ -33,7 +33,6 @@ def act(
             for key in [
                 "date",
                 "phone",
-                "karaoke?",
                 "name",
                 "description",
                 "location",
@@ -58,6 +57,7 @@ def act(
                     Subject="Contact query received",
                     Message=notification_message,
                 )
+                toast.create(connection_thread, session_data["id_"], "Contact query received", level="success")
         except lens.FocusingError:
             logger.warning(f"Attempt to check CSRF without CSRF present in session: {session_data}")
     if params.get("form") == "clear":
@@ -377,7 +377,7 @@ def format_notification(params: dict[str, str]) -> str:
     params["location"] = params["location"].replace("%20", " ")
     params["description"] = params["description"].replace("%20", " ")
     params["date"] = datetime.strptime(params["date"], "%Y-%m-%d").strftime("%a %b %d %Y")
-    params["karaoke?"] = "yes" if params["karaoke?"] == "on" else "no"
+    params["karaoke?"] = "yes" if params.get("karaoke?") else "no"
     params["time"] = datetime.strptime(unquote(params["time"]), "%H:%M").strftime("%I:%M %p")
     return (
         f"{params['name']} - {params['phone']} - {params['email']}\n"

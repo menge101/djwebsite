@@ -1,15 +1,5 @@
 from lib import session
 from pytest import fixture
-import boto3
-
-
-@fixture
-def connection_thread_mock(mocker, table_name):
-    client = boto3.client("dynamodb")
-    resource = boto3.resource("dynamodb")
-    thread_mock = mocker.Mock(name="ConnectionThread")
-    thread_mock.join.return_value = table_name, client, resource
-    return thread_mock
 
 
 @fixture

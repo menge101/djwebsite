@@ -34,6 +34,21 @@ def form_params(csrf_token):
 
 
 @fixture
+def form_params_no_karaoke(csrf_token):
+    return {
+        "csrf": csrf_token,
+        "date": "0003-03-03",
+        "description": "Some words to meet minumum.",
+        "duration": "3",
+        "email": "a@b.c",
+        "location": "YOLOLLLL",
+        "name": "Nath",
+        "phone": "4123271341",
+        "time": "03:03",
+    }
+
+
+@fixture
 def session_data_form_submitted(session_data):
     session_data["contact"] = {"form": "submitted"}
     return session_data
@@ -67,6 +82,7 @@ def test_act_not_all_params(connection_thread_mock, session_data):
 
 
 def test_act_all_params(
+    client_mock,
     connection_thread_mock,
     csrf_token,
     disable_thread_call_maybe,
@@ -74,7 +90,22 @@ def test_act_all_params(
     form_params,
     session_data_with_csrf,
 ):
+    client_mock.put_item.return_value = {"ResponseMetadata": {"HTTPStatusCode": 200}}
     observed, _ = contact.act(connection_thread_mock, session_data_with_csrf, form_params)
+    assert observed["contact"]["form"] == "submitted"
+
+
+def test_act_no_karaoke(
+    client_mock,
+    connection_thread_mock,
+    csrf_token,
+    disable_thread_call_maybe,
+    env_with_notification_arn,
+    form_params_no_karaoke,
+    session_data_with_csrf,
+):
+    client_mock.put_item.return_value = {"ResponseMetadata": {"HTTPStatusCode": 200}}
+    observed, _ = contact.act(connection_thread_mock, session_data_with_csrf, form_params_no_karaoke)
     assert observed["contact"]["form"] == "submitted"
 
 
@@ -124,6 +155,7 @@ def test_contact_connection_holder(
     sns_connection_thread_mock,
 ):
     mocker.patch("lib.contact.sns_client_global_holder", client_mock)
+    client_mock.put_item.return_value = {"ResponseMetadata": {"HTTPStatusCode": 200}}
     observed = contact.act(connection_thread_mock, session_data_with_csrf, form_params)
     expected = (session_data_with_csrf, [])
     assert observed == expected

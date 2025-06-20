@@ -29,7 +29,7 @@ class Production(Stage):
             header_behavior=cf.OriginRequestHeaderBehavior.none(),
             query_string_behavior=cf.OriginRequestQueryStringBehavior.allow_list("action"),
         )
-        throttles = {"proxy": {"burst": 30, "rate": 10}, "contact": {"burst": 2, "rate": 2}}
+        throttles = {"proxy": {"burst": 40, "rate": 30}, "contact": {"burst": 2, "rate": 2}}
         notification_email = "nathan.menge@gmail.com"
         api_quota: int = 5000
         website = Website(
@@ -68,7 +68,7 @@ class Development(Stage):
             header_behavior=(cf.OriginRequestHeaderBehavior.allow_list(*headers)),
             query_string_behavior=(cf.OriginRequestQueryStringBehavior.all()),
         )
-        throttles = {"proxy": {"burst": 30, "rate": 10}, "contact": {"burst": 2, "rate": 2}}
+        throttles = {"proxy": {"burst": 40, "rate": 30}, "contact": {"burst": 2, "rate": 2}}
         notification_email = "nathan.menge+dev@gmail.com"
         api_quota: int = 5000
         Website(

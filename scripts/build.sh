@@ -61,6 +61,7 @@ function build_contact() {
   cp ./lib/cookie.py $dest/$build_dir/lib/cookie.py
   cp ./lib/contact.py $dest/$build_dir/lib/contact.py
   cp ./lib/security.py $dest/$build_dir/lib/security.py
+  cp ./lib/toast.py $dest/$build_dir/lib/toast.py
   uv pip install --quiet -r ./requirements/contact.lock --target $dest/$build_dir --require-hashes
   (cd $dest/$build_dir && echo "Zipping: $(pwd)" && zip -Drq ../contact.zip ./*) || (echo "Failed to zip $dest/$build_dir" && exit 1)
   rm -r "${dest:?}/$build_dir"
