@@ -1,6 +1,8 @@
 from pytest import fixture
 import os
 
+from lib import toast
+
 
 @fixture(autouse=True)
 def disable_thread_call_maybe(connection_thread_mock, mocker, request):
@@ -64,3 +66,34 @@ def resource_mock(mocker):
 @fixture
 def table_name():
     return "test_table"
+
+
+@fixture
+def toast_message():
+    return "yolo"
+
+
+@fixture
+def toast_id():
+    return "001"
+
+
+@fixture
+def toast_obj(session_id, toast_message, toast_id, toast_ttl):
+    return toast.Toast(session_id, toast_message, toast_id=toast_id, ttl=toast_ttl, level="info")
+
+
+@fixture
+def toast_ttl():
+    return 99999
+
+
+@fixture
+def toast_db_record(session_id, toast_message, toast_id, toast_ttl):
+    return {
+        "pk": {"S": f"{session_id}-toast"},
+        "sk": {"S": toast_id},
+        "message": {"S": toast_message},
+        "ttl": {"N": str(toast_ttl)},
+        "level": {"S": "INFO"},
+    }

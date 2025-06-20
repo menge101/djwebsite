@@ -6,6 +6,7 @@ import csv
 from .image import images
 from .mix import mix
 from .section import section
+from .toasts import toasts
 
 
 @task
@@ -24,4 +25,5 @@ data = Collection()
 data.add_collection(section, "section")
 data.add_collection(images, "images")
 data.add_collection(mix, "mix")
+data.add_collection(toasts, "toast")
 data.add_task(cast(Task, load_ddb_table))
