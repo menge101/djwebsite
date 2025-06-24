@@ -99,7 +99,7 @@ class Web(Construct):
             tracing=lam.Tracing.ACTIVE if tracing else lam.Tracing.DISABLED,
             environment=function_environment_variables,
             memory_size=512,
-            reserved_concurrent_executions=3,
+            reserved_concurrent_executions=5,
         )
         proxy_integration = api.LambdaIntegration(cast(lam.IFunction, proxy_fn))
         function_environment_variables["notification_topic_arn"] = self.notification_topic.topic_arn
