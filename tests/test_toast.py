@@ -1,5 +1,4 @@
-from datetime import datetime
-
+from datetime import datetime, UTC
 from lib import toast
 
 
@@ -79,9 +78,9 @@ def test__eq__(toast_obj, session_id, toast_id, toast_message, toast_ttl):
 
 def test_expiration(mocker):
     datetime_mock = mocker.patch("lib.toast.datetime")
-    datetime_mock.now.return_value = datetime(2020, 1, 1, 0, 0)
+    datetime_mock.now.return_value = datetime(2020, 1, 1, 0, 0, tzinfo=UTC)
     observed = toast.Toast.expiration()
-    expected = 1577855400
+    expected = 1577837400
     assert observed == expected
 
 
